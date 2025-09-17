@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Projects</title>
+<style>
+  /* reset to avoid stray scrollbars from UA defaults */
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  .hub {
+    --bg: #000;
+    --ring: rgba(255, 255, 255, .08);
+    --text: #f2f2f2;
+    --accent: #FBB91A;
+
+    /* motion */
+    --t-hover: 360ms;
+    --t-shadow: 440ms;
+    --t-press-in: 140ms;
+    --ease-out: cubic-bezier(.2, .7, .1, 1);
+    --ease-in: cubic-bezier(.4, 0, .6, 1);
+
+    margin: 0;
+    height: 100svh;
+    /* CHANGED: exact viewport height */
+    width: 100vw;
+    /* CHANGED: exact viewport width */
+    overflow: hidden;
+    /* CHANGED: prevent any scroll */
+    padding: 0;
+    /* CHANGED: remove outer padding */
+    display: grid;
+    place-items: center;
+    /* centers the grid itself */
+    background:
+      radial-gradient(80rem 80rem at 10% -20%, rgba(251, 185, 26, .08), transparent 60%),
+      radial-gradient(70rem 70rem at 110% 120%, rgba(240, 200, 108, .05), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", system-ui, sans-serif;
+  }
+
+  .grid {
+    width: min(1000px, 100%);
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    place-items: stretch;
+    /* grid children sizing */
+    justify-items: stretch;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .card {
+    position: relative;
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    color: var(--text);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .00));
+    border-radius: 16px;
+    height: 150px;
+    box-shadow:
+      inset 0 0 0 1px var(--ring),
+      0 6px 28px rgba(0, 0, 0, .45);
+    isolation: isolate;
+    overflow: hidden;
+    outline: 0;
+    transition:
+      transform var(--t-hover) var(--ease-out),
+      box-shadow var(--t-shadow) var(--ease-out),
+      filter var(--t-hover) var(--ease-out);
+    will-change: transform, box-shadow;
+  }
+
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--t-hover) var(--ease-out);
+    background: linear-gradient(135deg,
+        rgba(251, 185, 26, .00),
+        rgba(251, 185, 26, .16),
+        rgba(240, 200, 108, .00));
+    mix-blend-mode: plus-lighter;
+  }
+
+  .card h2 {
+    margin: 0;
+    font-size: clamp(18px, 2.4vw, 22px);
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 12px rgba(251, 185, 26, .15);
+    transition: transform var(--t-hover) var(--ease-out), opacity var(--t-hover) var(--ease-out);
+  }
+
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow:
+      inset 0 0 0 1px var(--ring),
+      0 12px 38px rgba(0, 0, 0, .56);
+  }
+
+  .card:hover::after,
+  .card:focus-visible::after {
+    opacity: 1;
+  }
+
+  .card:hover h2,
+  .card:focus-visible h2 {
+    transform: translateY(-1px);
+  }
+
+  .card:active {
+    transition-duration: var(--t-press-in);
+    transition-timing-function: var(--ease-in);
+    transform: translateY(-1px) scale(.992);
+    box-shadow:
+      inset 0 0 0 1px var(--ring),
+      0 8px 30px rgba(0, 0, 0, .5);
+  }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    background: radial-gradient(circle,
+        rgba(251, 185, 26, .35) 0%,
+        rgba(251, 185, 26, .22) 40%,
+        rgba(251, 185, 26, 0) 70%);
+    opacity: 0;
+  }
+
+  .ripple.is-animating {
+    animation: ripple-kf 720ms var(--ease-out) forwards;
+  }
+
+  @keyframes ripple-kf {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: .35;
+    }
+
+    60% {
+      opacity: .22;
+    }
+
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+</style>
+
+<body class="hub">
+  <main class="grid" aria-label="Projects">
+    <a class="card" href="./apps/acidentes/">
+      <h2>Acidentes</h2>
+    </a>
+    <a class="card" href="./apps/ocorrencias/">
+      <h2>Ocorrências</h2>
+    </a>
+    <a class="card" href="./apps/alertas/">
+      <h2>Alertas</h2>
+    </a>
+  </main>
+
+  <script>
+    // Ripple on click
+    const cards = document.querySelectorAll('.card');
+
+    function createRipple(card, x, y) {
+      const r = card.getBoundingClientRect();
+      const relX = x - r.left, relY = y - r.top;
+      const dx = Math.max(relX, r.width - relX);
+      const dy = Math.max(relY, r.height - relY);
+      const radius = Math.hypot(dx, dy);
+      const size = radius * 2;
+
+      const span = document.createElement('span');
+      span.className = 'ripple';
+      span.style.left = relX + 'px';
+      span.style.top = relY + 'px';
+      span.style.width = size + 'px';
+      span.style.height = size + 'px';
+      requestAnimationFrame(() => span.classList.add('is-animating'));
+      span.addEventListener('animationend', () => span.remove());
+      card.appendChild(span);
+    }
+
+    cards.forEach((card) => {
+      card.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+        createRipple(card, e.clientX, e.clientY);
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const r = card.getBoundingClientRect();
+          createRipple(card, r.left + r.width / 2, r.top + r.height / 2);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
