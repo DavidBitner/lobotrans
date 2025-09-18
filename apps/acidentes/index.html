@@ -393,6 +393,25 @@
     </svg>
   </a>
 
+  <!-- Fixed options panel (Acidentes) -->
+  <aside class="opts-panel" aria-labelledby="opts-a-title">
+    <h3 id="opts-a-title">OPÇÕES</h3>
+
+    <label class="sr-only" for="opt-action-a">Escolha uma opção</label>
+    <select id="opt-action-a" class="opts-select">
+      <option value="">— selecione —</option>
+      <option value="clear-all">LIMPAR TUDO</option>
+      <option value="colisao-veiculo" disabled aria-disabled="true" title="Em breve">COLISÃO X VEÍCULO</option>
+      <option value="colisao-coletivo" disabled aria-disabled="true" title="Em breve">COLISÃO X COLETIVO</option>
+      <option value="colisao-objeto" disabled aria-disabled="true" title="Em breve">COLISÃO X OBJETO</option>
+      <option value="avaria-coletivo">AVARIA NO COLETIVO</option>
+      <option value="geral">GERAL</option>
+    </select>
+
+
+    <button id="opt-apply-a" type="button" class="opts-apply">APLICAR</button>
+  </aside>
+
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.8/dist/pizzip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.17.1/docxtemplater.js"></script>
   <script src="app.js"></script>

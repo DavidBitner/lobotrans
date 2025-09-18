@@ -504,6 +504,96 @@
   }
 
   /* ------------------------------------------------------------------------ */
+  /* Options panel (Acidentes)                                                */
+  /* ------------------------------------------------------------------------ */
+
+  function setValA(id, value) {
+    const el = byId(id);
+    if (!el) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function fillOnlyOcorrencia(text) {
+    setValA('ocorrencia', text);
+  }
+
+  function fillAvariaColetivo() {
+    setValA('ocorrencia', 'AVARIA NO COLETIVO');
+    setValA('logradouro', 'GARAGEM UNIÃO');
+    setValA('numero', '244');
+    setValA('bairro', 'JARDIM GUANABARA');
+
+    // driver fields
+    setValA('driverName', 'NÃO CABE');
+    setValA('driverCpf', '-');
+    setValA('driverSituation', '-');
+
+    // body + outcome
+    setValA('inicioFato',
+      `INSPETOR OPERACIONAL __________ INFORMA, TRATA-SE DE UMA AVARIA ENCONTRADA NO COLETIVO ______, DENTRO DA GARAGEM UNIÃO, COLETIVO FOI ENCONTRADO PELO OPERACIONAL ÀS _________, NO ____________ COM A ______________ DANIFICADA.`);
+    setValA('desfecho', 'OPERACIONAL ___________ COMPARECEU AO CCO PARA INFORMAR SOBRE A AVARIA.');
+  }
+
+  function fillGeralAcidentes() {
+    setValA('inicioFato',
+      `INSPETOR OPERACIONAL _____________ RELATA, TRATA-SE DE ______________, ENVOLVENDO O COLETIVO ______________, CONDUZIDO POR ______________________, PORTADOR DO CPF: ___________________, O MESMO RELATA _______________________________.
+
+NA ANÁLISE DAS CÂMERAS, __________________________________________.`);
+  }
+
+  function isDisabledOption(selectEl, value) {
+    const opt = Array.from(selectEl.options).find(o => o.value === value);
+    // Treat unknown or explicitly disabled as unavailable
+    return !opt || opt.disabled;
+  }
+
+
+  function applyOptionAcidentes() {
+    const sel = byId('opt-action-a');
+    if (!sel) return;
+
+    const choice = sel.value;
+    if (!choice) return;
+
+    // Don’t act on disabled/placeholder items
+    if (isDisabledOption(sel, choice)) {
+      sel.value = ''; // reset to placeholder
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+
+    // Prep form
+    clearAll();
+
+    // Restore user selection after clear
+    sel.value = choice;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+
+    switch (choice) {
+      case 'clear-all':
+        // already cleared by applyOptionAcidentes() pre-step; nothing else to fill
+        break;
+      case 'avaria-coletivo':
+        fillAvariaColetivo();
+        break;
+      case 'geral':
+        fillGeralAcidentes();
+        break;
+      default:
+        // Unhandled options are considered inactive
+        break;
+    }
+  }
+
+
+  function wireOptionsPanelAcidentes() {
+    const btn = byId('opt-apply-a');
+    if (btn) btn.addEventListener('click', applyOptionAcidentes);
+  }
+
+  /* ------------------------------------------------------------------------ */
   /* Init                                                                      */
   /* ------------------------------------------------------------------------ */
   function init() {
@@ -512,6 +602,7 @@
     wireValidators();
     wireModal();
     wireActions();
+    wireOptionsPanelAcidentes();
   }
 
   document.addEventListener('DOMContentLoaded', init);
