@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario de Interferências</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="logo.png">
+</head>
+
+<body>
+  <div class="form-container">
+    <h2>Formulário de Interferências</h2>
+
+    <!-- Geral -->
+    <h3>Geral</h3>
+    <section class="form-section">
+      <label for="nOc">Nº OC (Formato: 6C****):</label>
+      <input type="text" id="nOc" name="nOc" pattern="^6C\d{4}$" required placeholder="6C1234">
+      <small id="nOcError">Por favor, insira um número de OC válido (Formato: 6C****)</small>
+    </section>
+
+    <section class="form-section">
+      <label for="ocorrencia">Ocorrência (ex: Acidente entre terceiros, Instabilidade Sistema SIM, Obras de
+        recapeamento):</label>
+      <input type="text" id="ocorrencia" name="ocorrencia" required placeholder="Descrição da Ocorrência">
+      <small id="ocorrenciaError">Por favor, insira um tipo de ocorrência</small>
+    </section>
+
+    <section class="form-section">
+      <label for="date">Data:</label>
+      <input type="date" id="date" name="date" required>
+    </section>
+
+    <section class="form-section">
+      <label for="inicio">Início:</label>
+      <input type="time" id="inicio" name="inicio" required>
+
+      <label for="termino">Término:</label>
+      <input type="time" id="termino" name="termino" required>
+    </section>
+
+    <section class="form-section">
+      <label for="logradouro">Logradouro (Endereço do ocorrido):</label>
+      <input type="text" id="logradouro" name="logradouro" required placeholder="Não Cabe">
+    </section>
+
+    <section class="form-section">
+      <label for="numero">Nº (Número do endereço):</label>
+      <input type="text" id="numero" name="numero" pattern="^\d+$" required placeholder="Não Cabe">
+    </section>
+
+    <section class="form-section">
+      <label for="bairro">Bairro:</label>
+      <input type="text" id="bairro" name="bairro" required placeholder="Não Cabe">
+    </section>
+
+    <!-- Descrição -->
+    <h3>Descrição</h3>
+    <section class="form-section">
+      <p class="disclaimer">Recomendado preencher o campo abaixo com o CAPSLOCK desligado...</p>
+      <label for="inicioFato">Corpo da Ocorrência:</label>
+      <textarea id="inicioFato" class="full-width" rows="10" placeholder="Descreva o início do fato..."></textarea>
+    </section>
+
+    <!-- Detalhamento -->
+    <h3>Detalhamento</h3>
+    <section class="form-section">
+      <label for="motivo">Motivo:</label>
+      <input type="text" id="motivo" name="motivo" placeholder="Não Cabe">
+
+      <label for="respObra">Responsável pela Obra:</label>
+      <input type="text" id="respObra" name="respObra" placeholder="Não Cabe">
+
+      <label for="desviosbc">Desvios B/C:</label>
+      <input type="text" id="desviosbc" name="desviosbc" placeholder="Não Houve">
+
+      <label for="desvioscb">Desvios C/B:</label>
+      <input type="text" id="desvioscb" name="desvioscb" placeholder="Não Houve">
+
+      <label for="linhasAfetadas">Linhas Afetadas:</label>
+      <input type="text" id="linhasAfetadas" name="linhasAfetadas" placeholder="Não Houve">
+
+      <label for="alerta">Alerta:</label>
+      <input type="text" id="alerta" name="alerta" placeholder="Não Houve">
+
+      <label for="linha">Linha:</label>
+      <input type="text" id="linha" name="linha" placeholder="Não Houve">
+
+      <label for="ocSptrans">OC. SPTRANS:</label>
+      <input type="text" id="ocSptrans" name="ocSptrans" placeholder="Não Houve">
+
+      <label for="contato">Contato (Nome do contato da SPTrans):</label>
+      <input type="text" id="contato" name="contato" placeholder="Não Houve">
+
+      <label for="cco">CCO (Responsável pela ocorrência):</label>
+      <input type="text" id="cco" name="cco" placeholder="Yvan">
+
+      <label for="operacional">Operacional (Nome do operacional):</label>
+      <input type="text" id="operacional" name="operacional" placeholder="Não Houve">
+    </section>
+
+    <section class="form-section hidden" id="excel">
+      <h3>Occurrence Control Line</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>nOc</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Alerta</th>
+              <th>Ocorrência</th>
+              <th>Logradouro</th>
+              <th>Operacional</th>
+              <th>OC SPTrans</th>
+              <th>Contato</th>
+              <th>Término</th>
+              <th>CCO</th>
+              <th>Fechamento</th>
+              <th>Email</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="td-nOc">6C0345/2025</td>
+              <td id="td-date">07/06</td>
+              <td id="td-status">FECHADO</td>
+              <td id="td-alerta">NÃO</td>
+              <td id="td-ocorrencia">ACIDENTE ENTRE TERCEIROS</td>
+              <td id="td-logradouro">CANAL DO C</td>
+              <td id="td-operacional">NÃO HOUVE</td>
+              <td id="td-ocSptrans">NÃO HOUVE</td>
+              <td id="td-contato">NÃO HOUVE</td>
+              <td id="td-termino">12:50</td>
+              <td id="td-cco">DAVID B.</td>
+              <td id="td-fechamento">-</td>
+              <td id="td-email">SIM</td>
+              <td id="td-obs">SEM MAIS</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="button" id="copy" onclick="clear()">
+        <span class="shadow"></span>
+        <span class="edge"></span>
+        <div class="front">
+          <span>COPIAR LINHA</span>
+        </div>
+      </button>
+    </section>
+
+
+
+    <button class="button" id="generateWord">
+      <span class="shadow"></span>
+      <span class="edge"></span>
+      <div class="front">
+        <span>GERAR WORD</span>
+      </div>
+    </button>
+
+    <button class="button" id="clear" onclick="clear()">
+      <span class="shadow"></span>
+      <span class="edge"></span>
+      <div class="front">
+        <span>LIMPAR</span>
+      </div>
+    </button>
+
+    <button class="button" id="notes">
+      <span class="shadow"></span>
+      <span class="edge"></span>
+      <div class="front">
+        <span>ANOTAÇÕES</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- Modal Container -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h2>Notes</h2>
+      <h3>CONTATOS QUE RECEBEM E-MAIL DE INTERFERÊNCIAS OPERACIONAIS:</h3>
+      <p>
+        Para: Regiane Guimaraes &lt;regianemultas@wolffsp.com&gt;,
+        Multas Transwolff &lt;multas@wolffsp.com&gt;,
+        Mauricio Oliveira da Silva &lt;mauricio.oliveira@wolffsp.com&gt;,
+        Maycoln Fin &lt;maycolnplanejamento@wolffsp.com&gt;
+      </p>
+      <p>
+        CC: Yvan Sguassabia Brayn &lt;yvanoperacional@wolffsp.com&gt;,
+        Celso Ribeiro &lt;celsooperacional@wolffsp.com&gt;,
+        Roberto Belchior &lt;robertooperacional@wolffsp.com&gt;,
+        Maycoln Fin &lt;reinaldooperacional@wolffsp.com&gt;
+      </p>
+    </div>
+  </div>
+
+  <a class="back-home-btn" href="../../" aria-label="Back to home">
+    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+      <path fill="currentColor" d="M12 2l2.6 2.7L17 2l2 5.6V14l-3.8-1.6L12 20l-3.2-7.6L5 14V7.6L7 2l2.4 2.7L12 2z" />
+      <path fill="currentColor"
+        d="M8.4 9.8L6 12.4l3.3-.4L9 11c.3-.7-.1-1.5-.6-1.2zM15.6 9.8l.3 1.2 3.1.4-2.4-2.6c-.6-.3-1 .5-.6 1z" />
+    </svg>
+  </a>
+
+  <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.8/dist/pizzip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.17.1/docxtemplater.js"></script>
+  <script src="app.js"></script>
+</body>
+
+
+</html>
