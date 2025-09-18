@@ -207,10 +207,27 @@
     </svg>
   </a>
 
+  <!-- Fixed options panel -->
+  <aside class="opts-panel" aria-labelledby="opts-title">
+    <h3 id="opts-title">OPÇÕES</h3>
+
+    <label class="sr-only" for="opt-action">Escolha uma opção</label>
+    <select id="opt-action" class="opts-select">
+      <option value="">— selecione —</option>
+      <option value="clear-all">LIMPAR TUDO</option>
+      <option value="sim-instabilidade">INSTABILIDADE NO SISTEMA SIM</option>
+      <option value="festividade-popular">FESTIVIDADE POPULAR</option>
+      <option value="acidente-terceiros">ACIDENTE ENTRE TERCEIROS</option>
+      <option value="alagamento">ALAGAMENTO</option>
+      <option value="geral">GERAL</option>
+    </select>
+
+    <button id="opt-apply" type="button" class="opts-apply">APLICAR</button>
+  </aside>
+
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.8/dist/pizzip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.17.1/docxtemplater.js"></script>
   <script src="app.js"></script>
 </body>
-
 
 </html>

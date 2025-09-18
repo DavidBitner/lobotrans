@@ -314,6 +314,138 @@
   }
 
   /* ------------------------------------------------------------------------ */
+  /* Options panel (ocorrências)                                              */
+  /* ------------------------------------------------------------------------ */
+
+  function setVal(id, value) {
+    const el = byId(id);
+    if (!el) return;
+    el.value = value;
+    // trigger persistence/validators already wired
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function fillSimInstabilidade() {
+    setVal('ocorrencia', 'INSTABILIDADE NO SISTEMA SIM');
+    setVal('logradouro', 'GARAGEM UNIÃO');
+    setVal('numero', '-');
+    setVal('bairro', '-');
+    setVal('inicioFato', `NO DIA _______, POR VOLTA DAS _______H, FOI IDENTIFICADA INSTABILIDADE NO SISTEMA "SIM", IMPOSSIBILITANDO O ACESSO AOS SERVIÇOS E FERRAMENTAS DISPONIBILIZADOS PELA PLATAFORMA. ENTRE OS RECURSOS AFETADOS, DESTACAM-SE:
+
+*VIAGENS PROGRAMADAS E MONITORADAS;
+*CONSULTAS DE VIAGENS E RESPECTIVOS DADOS (VEÍCULO, HORÁRIO, TEMPO);
+*TABELA OPERACIONAL E TABELAS IVOS;
+*MONITORAMENTO ONLINE DA FROTA POR GARAGEM (PEDRA ELETRÔNICA);
+*MAPEAMENTO ONLINE, TRATATIVAS DE ALERTAS E CONTABILIZAÇÃO DA FROTA.
+
+PROTOCÓLO SPTRANS Nº: _________________`);
+  }
+
+  function fillFestividadePopular() {
+    setVal('ocorrencia', 'FESTIVIDADE POPULAR');
+    setVal('inicioFato', `INSPETOR OPERACIONAL ______________ PELO LOCA INFORMA, UMA FESTIVIDADE POPULAR ________________________________, NA VIA: ________________________________, NUMERO ____. DEVIDO AO EVENTO, HÁ UMA GRANDE CONCENTRAÇÃO DE VEÍCULOS E PEDESTRES NA VIA, O QUE IMPOSSIBILITA O TRÁFEGO DE COLETIVOS NO TRECHO.
+
+DESVIOS B > C: ___________________________
+
+DESVIOS C > B: ___________________________
+
+COLETIVOS DEIXANDO DE ATENDER _____ PONTOS.
+
+LINHAS AFETADAS: _________________________`);
+  }
+
+  function fillAcidenteTerceiros() {
+    setVal('ocorrencia', 'ACIDENTE ENTRE TERCEIROS.');
+    setVal('inicioFato', `INSPETOR OPERACIONAL _________________ PELO LOCAL INFORMA, TRATA-SE DE UM ACIDENTE ENTRE TERCEIROS NA VIA ________________, ALTURA DO NUMERAL _________ ENVOLVENDO UM _____________ (EMPLACAMENTO: _________, MODELO: _______, ANO: _____, COR: __________, DADOS DO CONDUTOR: ____________) X ____________ (EMPLACAMENTO: _________, MODELO: _______, ANO: _____, COR: __________, DADOS DO CONDUTOR: ____________) *****INTERFERINDO NO TOTAL/PARCIAL DO VIÁRIO SENTIDO BAIRRO/CENTRO E/OU CENTRO/BAIRRO*****, OCASIONANDO CONSIDERÁVEIS LESÕES NO ANDAMENTO DA OPERAÇÃO E SENDO POTENCIAL MOTIVO DE MÚLTIPLAS INTERFERÊNCIAS NOS ÍNDICES DE PONTUALIDADE DE PARTIDA E ÍNDICES DE CUMPRIMENTO DE VIAGEM.
+
+DESVIOS B > C: ___________________________
+
+DESVIOS C > B: ___________________________
+
+COLETIVOS DEIXANDO DE ATENDER _____ PONTOS.
+
+LINHAS AFETADAS: _________________________`);
+  }
+
+  function fillGeral() {
+    setVal('inicioFato', `INSPETOR OPERACIONAL _________________ PELO LOCAL INFORMA, TRATA-SE DE __________________________ NA VIA ____________________, ALTURA DO NUMERAL ____________, *****INTERFERINDO O TOTAL/PARCIAL DO VIÁRIO SENTIDO BAIRRO/CENTRO E/OU CENTRO/BAIRRO*****, OCASIONANDO CONSIDERÁVEIS LESÕES NO ANDAMENTO DA OPERAÇÃO E SENDO POTENCIAL MOTIVO DE MÚLTIPLAS INTERFERÊNCIAS NOS ÍNDICES DE PONTUALIDADE DE PARTIDA E ÍNDICES DE CUMPRIMENTO DE VIAGEM.
+
+DESVIOS B > C: ___________________________
+
+DESVIOS C > B: ___________________________
+
+COLETIVOS DEIXANDO DE ATENDER _____ PONTOS
+
+LINHAS AFETADAS: _________________________`);
+  }
+
+  function fillAlagamento() {
+    setVal('ocorrencia', 'ALAGAMENTO');
+    setVal('logradouro', 'SÃO PAULO - SP');
+    setVal('numero', '-');
+    setVal('bairro', '-');
+    setVal('inicioFato', 'DEVIDO ÀS FORTES CHUVAS NA REGIÃO SUL DE SÃO PAULO, FORMARAM-SE PONTOS DE ALAGAMENTO NAS PRINCIPAIS VIAS DE ATENDIMENTO DA EMPRESA TRANSWOLFF, EM AMBOS OS SENTIDOS (C/B E B/C). O VIÁRIO FICOU TOTALMENTE ALAGADO, COM FLUXO DE ÁGUA MODERADO, CAUSANDO DIFICULDADES NA PASSAGEM DOS COLETIVOS. OS VEÍCULOS TRANSITARAM COM EXTREMA LENTIDÃO OU, EM ALGUNS CASOS, PERMANECERAM IMOBILIZADOS, O QUE RESULTOU EM ATRASOS NAS PARTIDAS PROGRAMADAS E IMPACTOS NA OPERAÇÃO.');
+    setVal('desviosbc', 'DIVERSOS');
+    setVal('desvioscb', 'DIVERSOS');
+    setVal('linhasAfetadas', 'REGIÃO D10');
+  }
+
+  function applyOption() {
+    const sel = byId('opt-action');
+    if (!sel) return;
+
+    // Capture the selection before clearing everything
+    const choice = sel.value;
+    if (!choice) return;
+
+    // Prep: wipe form + storage + hide preview
+    clearAll();
+
+    // Restore the user's selection in the panel (clearAll() resets selects)
+    sel.value = choice;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Apply the chosen template
+    switch (choice) {
+      case 'clear-all':
+        // already cleared — nothing else to do
+        break;
+
+      case 'sim-instabilidade':
+        fillSimInstabilidade();
+        break;
+
+      case 'festividade-popular':
+        fillFestividadePopular();
+        break;
+
+      case 'acidente-terceiros':
+        fillAcidenteTerceiros();
+        break;
+
+      case 'alagamento':
+        fillAlagamento();
+        break;
+
+      case 'geral':
+        fillGeral();
+        break;
+
+      // add future cases here (acidente-terceiros, geral, ...)
+      default:
+        break;
+    }
+  }
+
+
+  function wireOptionsPanel() {
+    const btn = byId('opt-apply');
+    if (btn) btn.addEventListener('click', applyOption);
+  }
+
+
+  /* ------------------------------------------------------------------------ */
   /* Init                                                                     */
   /* ------------------------------------------------------------------------ */
   function init() {
@@ -321,6 +453,7 @@
     wireValidators();
     wireModal();
     wireActions();
+    wireOptionsPanel();
   }
 
   document.addEventListener('DOMContentLoaded', init);
