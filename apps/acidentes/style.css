@@ -226,6 +226,7 @@ input::placeholder {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  overflow: auto;
 }
 
 /* Show Modal */
@@ -470,3 +471,4 @@ td {
   color: #777;
 
 }
+
