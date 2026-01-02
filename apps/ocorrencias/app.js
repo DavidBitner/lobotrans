@@ -13,7 +13,7 @@
   /* Config                                                                   */
   /* ------------------------------------------------------------------------ */
   const APP_NS = 'ocorrencias:'; // unique prefix for this app
-  const YEAR_SUFFIX = '2025';     // keep old behavior; set '' to auto from date
+  const YEAR_SUFFIX = '2026';     // keep old behavior; set '' to auto from date
 
   /* ------------------------------------------------------------------------ */
   /* DOM utils                                                                */
@@ -458,3 +458,4 @@ LINHAS AFETADAS: _________________________`);
 
   document.addEventListener('DOMContentLoaded', init);
 })();
+
