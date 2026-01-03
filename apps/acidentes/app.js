@@ -13,7 +13,7 @@
   /* Config                                                                   */
   /* ------------------------------------------------------------------------ */
   const APP_NS = 'acidentes:'; // unique storage prefix for this app
-  const YEAR_SUFFIX = '2025';  // keep old behavior; set '' to auto from date
+  const YEAR_SUFFIX = '2026';  // keep old behavior; set '' to auto from date
 
   /* ------------------------------------------------------------------------ */
   /* DOM Utils                                                                */
@@ -607,3 +607,4 @@ NA ANÁLISE DAS CÂMERAS, __________________________________________.`);
 
   document.addEventListener('DOMContentLoaded', init);
 })();
+
