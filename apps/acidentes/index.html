@@ -1,458 +1,736 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulario de Ocorrência</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo.png" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulario de Ocorrência</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" type="image/png" href="logo.png">
-</head>
+  <body>
+    <div class="form-container">
+      <h2>Formulario de Ocorrência</h2>
 
-<body>
-  <div class="form-container">
-    <h2>Formulario de Ocorrência</h2>
+      <!-- General Group -->
+      <h3>Geral</h3>
+      <!-- Field 1: Nº OC -->
+      <section class="form-section">
+        <label for="nOc">Nº OC (Formato: 6A****):</label>
+        <input
+          type="text"
+          id="nOc"
+          name="nOc"
+          pattern="^6A\d{4}$"
+          required
+          placeholder="6A1234"
+        />
+        <small id="nOcError"
+          >Por favor, insira um número de OC válido (Formato: 6A****)</small
+        >
+      </section>
 
-    <!-- General Group -->
-    <h3>Geral</h3>
-    <!-- Field 1: Nº OC -->
-    <section class="form-section">
-      <label for="nOc">Nº OC (Formato: 6A****):</label>
-      <input type="text" id="nOc" name="nOc" pattern="^6A\d{4}$" required placeholder="6A1234">
-      <small id="nOcError">Por favor, insira um número de OC válido (Formato: 6A****)</small>
-    </section>
+      <!-- Field 2: Ocorrência -->
+      <section class="form-section">
+        <label for="ocorrencia"
+          >Ocorrência (ex: Colisão x auto, Eventualidade, Atendimento a mal
+          súbito):</label
+        >
+        <input
+          type="text"
+          id="ocorrencia"
+          name="ocorrencia"
+          required
+          placeholder="Descrição da Ocorrência"
+        />
+        <small id="ocorrenciaError"
+          >Por favor, insira um tipo de ocorrência</small
+        >
+      </section>
 
-    <!-- Field 2: Ocorrência -->
-    <section class="form-section">
-      <label for="ocorrencia">Ocorrência (ex: Colisão x auto, Eventualidade, Atendimento a mal súbito):</label>
-      <input type="text" id="ocorrencia" name="ocorrencia" required placeholder="Descrição da Ocorrência">
-      <small id="ocorrenciaError">Por favor, insira um tipo de ocorrência</small>
-    </section>
+      <!-- Field 3: Coletivo -->
+      <section class="form-section">
+        <label for="coletivo">Coletivo (Formato: 66***):</label>
+        <input
+          type="text"
+          id="coletivo"
+          name="coletivo"
+          pattern="^66\d{3}$"
+          required
+          placeholder="66123"
+        />
+        <small id="coletivoError"
+          >Por favor, insira um prefixo de coletivo válido (Formato:
+          66***)</small
+        >
+      </section>
 
-    <!-- Field 3: Coletivo -->
-    <section class="form-section">
-      <label for="coletivo">Coletivo (Formato: 66***):</label>
-      <input type="text" id="coletivo" name="coletivo" pattern="^66\d{3}$" required placeholder="66123">
-      <small id="coletivoError">Por favor, insira um prefixo de coletivo válido (Formato: 66***)</small>
-    </section>
+      <!-- Field 4: Linha -->
+      <section class="form-section">
+        <label for="linha">Linha (Formato: XXXX-XX):</label>
+        <input
+          type="text"
+          id="linha"
+          name="linha"
+          pattern="^[A-Za-z0-9]{4}-[A-Za-z0-9]{2}$"
+          required
+          placeholder="XXXX-XX"
+        />
+        <small id="linhaError"
+          >Por favor, insira uma linha válida (Formato: XXXX-XX)</small
+        >
+      </section>
 
-    <!-- Field 4: Linha -->
-    <section class="form-section">
-      <label for="linha">Linha (Formato: XXXX-XX):</label>
-      <input type="text" id="linha" name="linha" pattern="^[A-Za-z0-9]{4}-[A-Za-z0-9]{2}$" required
-        placeholder="XXXX-XX">
-      <small id="linhaError">Por favor, insira uma linha válida (Formato: XXXX-XX)</small>
-    </section>
+      <!-- Field 5: Data (using type="date") -->
+      <section class="form-section">
+        <label for="date">Data:</label>
+        <input type="date" id="date" name="date" required />
+        <small id="dateError">Por favor, insira uma data válida</small>
+      </section>
 
-    <!-- Field 5: Data (using type="date") -->
-    <section class="form-section">
-      <label for="date">Data:</label>
-      <input type="date" id="date" name="date" required>
-      <small id="dateError">Por favor, insira uma data válida</small>
-    </section>
+      <!-- Field 6: Hora (using type="time") -->
+      <section class="form-section">
+        <label for="time">Hora:</label>
+        <input type="time" id="time" name="time" required placeholder="HH:MM" />
+        <small id="timeError">Por favor, insira um horário válido</small>
+      </section>
 
-    <!-- Field 6: Hora (using type="time") -->
-    <section class="form-section">
-      <label for="time">Hora:</label>
-      <input type="time" id="time" name="time" required placeholder="HH:MM">
-      <small id="timeError">Por favor, insira um horário válido</small>
-    </section>
+      <!-- Field 7: Logradouro -->
+      <section class="form-section">
+        <label for="logradouro">Logradouro (Endereço):</label>
+        <input
+          type="text"
+          id="logradouro"
+          name="logradouro"
+          required
+          placeholder="Endereço onde ocorreu a ocorrência"
+        />
+        <small id="logradouroError">Por favor, insira um endereço válido</small>
+      </section>
 
-    <!-- Field 7: Logradouro -->
-    <section class="form-section">
-      <label for="logradouro">Logradouro (Endereço):</label>
-      <input type="text" id="logradouro" name="logradouro" required placeholder="Endereço onde ocorreu a ocorrência">
-      <small id="logradouroError">Por favor, insira um endereço válido</small>
-    </section>
+      <!-- Field 8: Nº -->
+      <section class="form-section">
+        <label for="numero">Nº (Número do endereço):</label>
+        <input
+          type="text"
+          id="numero"
+          name="numero"
+          pattern="^\d+$"
+          required
+          placeholder="Número do endereço"
+        />
+        <small id="numeroError"
+          >Por favor, insira um número de endereço válido</small
+        >
+      </section>
 
-    <!-- Field 8: Nº -->
-    <section class="form-section">
-      <label for="numero">Nº (Número do endereço):</label>
-      <input type="text" id="numero" name="numero" pattern="^\d+$" required placeholder="Número do endereço">
-      <small id="numeroError">Por favor, insira um número de endereço válido</small>
-    </section>
+      <!-- Field 9: Bairro -->
+      <section class="form-section">
+        <label for="bairro">Bairro:</label>
+        <input
+          type="text"
+          id="bairro"
+          name="bairro"
+          required
+          placeholder="Bairro da ocorrência"
+        />
+        <small id="bairroError">Por favor, insira um bairro válido</small>
+      </section>
 
-    <!-- Field 9: Bairro -->
-    <section class="form-section">
-      <label for="bairro">Bairro:</label>
-      <input type="text" id="bairro" name="bairro" required placeholder="Bairro da ocorrência">
-      <small id="bairroError">Por favor, insira um bairro válido</small>
-    </section>
+      <!-- Driver -->
+      <section class="form-section">
+        <div class="driver-entry">
+          <h5>Motorista</h5>
+          <!-- Dynamic title for driver entry -->
+          <label for="driverName">Nome:</label>
+          <input
+            type="text"
+            id="driverName"
+            name="driverName[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-    <!-- Driver -->
-    <section class="form-section">
-      <div class="driver-entry">
-        <h5>Motorista</h5> <!-- Dynamic title for driver entry -->
-        <label for="driverName">Nome:</label>
-        <input type="text" id="driverName" name="driverName[]" required placeholder="NÃO HOUVE">
+          <label for="driverCpf">CPF:</label>
+          <input
+            type="text"
+            id="driverCpf"
+            name="driverCpf[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-        <label for="driverCpf">CPF:</label>
-        <input type="text" id="driverCpf" name="driverCpf[]" required placeholder="NÃO HOUVE">
-
-        <label for="driverSituation">Situação:</label>
-        <input type="text" id="driverSituation" name="driverSituation[]" required placeholder="NÃO HOUVE">
-      </div>
-    </section>
-
-    <!-- Description Group -->
-    <h3>Descrição</h3> <!-- Section title for visual separation -->
-    <section class="form-section">
-      <p class="disclaimer">Recomendado preencher os próximos dois campos com o CAPSLOCK desligado para que o corretor
-        funcione corretamente. <br>Ambos os campos serão automaticamente convertidos para CAPSLOCK quando o Word for
-        gerado.</p>
-      <label for="inicioFato">Início do Fato:</label>
-      <textarea id="inicioFato" class="full-width" rows="10" placeholder="Descreva o início do fato..."></textarea>
-    </section>
-
-    <section class="form-section">
-      <label for="desfecho">Desfecho:</label>
-      <textarea id="desfecho" class="full-width" rows="5" placeholder="Descreva o desfecho..."></textarea>
-    </section>
-
-    <!-- Specifics Group -->
-    <h3>Informações Específicas</h3>
-    <section class="form-section">
-      <div class="victim-entry">
-        <h5>Vítima</h5>
-        <label for="victimName">Nome:</label>
-        <input type="text" id="victimName" name="victimName[]" required placeholder="NÃO HOUVE">
-
-        <label for="victimDocumentation">Documentação:</label>
-        <input type="text" id="victimDocumentation" name="victimDocumentation[]" required placeholder="NÃO HOUVE">
-
-        <label for="victimSituation">Situação:</label>
-        <input type="text" id="victimSituation" name="victimSituation[]" required placeholder="NÃO HOUVE">
-
-        <label for="victimContact">Contato:</label>
-        <input type="text" id="victimContact" name="victimContact[]" required placeholder="NÃO HOUVE">
-      </div>
-    </section>
-
-    <section class="form-section">
-      <div id="thirdParties">
-        <div class="third-party-entry">
-          <h5>Terceiro</h5>
-          <label for="thirdPartyName">Nome:</label>
-          <input type="text" id="thirdPartyName" name="thirdPartyName[]" required placeholder="NÃO HOUVE">
-
-          <label for="thirdPartyDocumentation">Documentação:</label>
-          <input type="text" id="thirdPartyDocumentation" name="thirdPartyDocumentation[]" required
-            placeholder="NÃO HOUVE">
-
-          <label for="thirdPartyContact">Contato:</label>
-          <input type="text" id="thirdPartyContact" name="thirdPartyContact[]" required placeholder="NÃO HOUVE">
+          <label for="driverSituation">Situação:</label>
+          <input
+            type="text"
+            id="driverSituation"
+            name="driverSituation[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="form-section">
-      <div class="witness-entry">
-        <h5>Testemunha</h5>
-        <label for="witnessName">Nome:</label>
-        <input type="text" id="witnessName" name="witnessName[]" required placeholder="NÃO HOUVE">
+      <!-- Description Group -->
+      <h3>Descrição</h3>
+      <!-- Section title for visual separation -->
+      <section class="form-section">
+        <p class="disclaimer">
+          Recomendado preencher os próximos dois campos com o CAPSLOCK desligado
+          para que o corretor funcione corretamente. <br />Ambos os campos serão
+          automaticamente convertidos para CAPSLOCK quando o Word for gerado.
+        </p>
+        <label for="inicioFato">Início do Fato:</label>
+        <textarea
+          id="inicioFato"
+          class="full-width"
+          rows="10"
+          placeholder="Descreva o início do fato..."
+        ></textarea>
+      </section>
 
-        <label for="witnessDocumentation">Documentação:</label>
-        <input type="text" id="witnessDocumentation" name="witnessDocumentation[]" required placeholder="NÃO HOUVE">
+      <section class="form-section">
+        <label for="desfecho">Desfecho:</label>
+        <textarea
+          id="desfecho"
+          class="full-width"
+          rows="5"
+          placeholder="Descreva o desfecho..."
+        ></textarea>
+      </section>
 
-        <label for="witnessContact">Contato:</label>
-        <input type="text" id="witnessContact" name="witnessContact[]" required placeholder="NÃO HOUVE">
+      <!-- Specifics Group -->
+      <h3>Informações Específicas</h3>
+      <section class="form-section">
+        <div class="victim-entry">
+          <h5>Vítima</h5>
+          <label for="victimName">Nome:</label>
+          <input
+            type="text"
+            id="victimName"
+            name="victimName[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-        <label for="witnessEmail">Email:</label>
-        <input type="email" id="witnessEmail" name="witnessEmail[]" required placeholder="NÃO HOUVE">
-      </div>
-    </section>
+          <label for="victimDocumentation">Documentação:</label>
+          <input
+            type="text"
+            id="victimDocumentation"
+            name="victimDocumentation[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-    <!-- General -->
-    <h3>General</h3>
-    <section class="form-section">
-      <h3>Grupo 1</h3>
-      <div class="field-group">
-        <!-- Group 1 Fields -->
-        <div class="field-column">
-          <label for="prat">PRAT</label>
-          <input type="text" id="prat" name="prat" placeholder="NÃO HOUVE">
+          <label for="victimSituation">Situação:</label>
+          <input
+            type="text"
+            id="victimSituation"
+            name="victimSituation[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-          <label for="pmvt">PM VT</label>
-          <input type="text" id="pmvt" name="pmvt" placeholder="NÃO HOUVE">
-
-          <label for="pmvtr">PM VTR</label>
-          <input type="text" id="pmvtr" name="pmvtr" placeholder="NÃO HOUVE">
-
-          <label for="bombeirosSamu">Bombeiros/Samu</label>
-          <input type="text" id="bombeirosSamu" name="bombeiros_samu" placeholder="NÃO HOUVE">
+          <label for="victimContact">Contato:</label>
+          <input
+            type="text"
+            id="victimContact"
+            name="victimContact[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="form-section">
-      <h3>Grupo 2</h3>
-      <div class="field-group">
-        <!-- Group 2 Fields -->
-        <div class="field-column">
-          <label for="sptrans">SPTRANS</label>
-          <input type="text" id="sptrans" name="sptrans" placeholder="NÃO HOUVE">
+      <section class="form-section">
+        <div id="thirdParties">
+          <div class="third-party-entry">
+            <h5>Terceiro</h5>
+            <label for="thirdPartyName">Nome:</label>
+            <input
+              type="text"
+              id="thirdPartyName"
+              name="thirdPartyName[]"
+              required
+              placeholder="NÃO HOUVE"
+            />
 
-          <label for="cet">CET</label>
-          <input type="text" id="cet" name="cet" placeholder="NÃO HOUVE">
+            <label for="thirdPartyDocumentation">Documentação:</label>
+            <input
+              type="text"
+              id="thirdPartyDocumentation"
+              name="thirdPartyDocumentation[]"
+              required
+              placeholder="NÃO HOUVE"
+            />
 
-          <label for="policiaCivil">Polícia Civil</label>
-          <input type="text" id="policiaCivil" name="policia_civil" placeholder="NÃO HOUVE">
-
-          <label for="gcm">GCM</label>
-          <input type="text" id="gcm" name="gcm" placeholder="NÃO HOUVE">
+            <label for="thirdPartyContact">Contato:</label>
+            <input
+              type="text"
+              id="thirdPartyContact"
+              name="thirdPartyContact[]"
+              required
+              placeholder="NÃO HOUVE"
+            />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="form-section">
-      <h3>Grupo 3</h3>
-      <div class="field-group">
-        <!-- Group 3 Fields -->
-        <div class="field-column">
-          <label for="bo">B.O</label>
-          <input type="text" id="bo" name="bo" placeholder="NÃO HOUVE">
+      <section class="form-section">
+        <div class="witness-entry">
+          <h5>Testemunha</h5>
+          <label for="witnessName">Nome:</label>
+          <input
+            type="text"
+            id="witnessName"
+            name="witnessName[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-          <label for="responsavelBo">Responsável pelo B.O</label>
-          <input type="text" id="responsavelBo" name="responsavel_bo" placeholder="NÃO HOUVE">
+          <label for="witnessDocumentation">Documentação:</label>
+          <input
+            type="text"
+            id="witnessDocumentation"
+            name="witnessDocumentation[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-          <label for="pericia">Perícia</label>
-          <input type="text" id="pericia" name="pericia" placeholder="NÃO HOUVE">
+          <label for="witnessContact">Contato:</label>
+          <input
+            type="text"
+            id="witnessContact"
+            name="witnessContact[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
 
-          <label for="ocSptrans">OC. SPTRANS</label>
-          <input type="text" id="ocSptrans" name="oc_sptrans" placeholder="NÃO HOUVE">
-
-          <label for="alerta">ALERTA</label>
-          <input type="text" id="alerta" name="alerta" placeholder="NÃO HOUVE">
+          <label for="witnessEmail">Email:</label>
+          <input
+            type="email"
+            id="witnessEmail"
+            name="witnessEmail[]"
+            required
+            placeholder="NÃO HOUVE"
+          />
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="form-section">
-      <h3>Interno</h3>
-      <div class="field-group" id="interno">
-        <!-- Group 4 Fields -->
-        <div class="field-column">
-          <label for="cco">CCO (Responsável pela ocorrência)</label>
-          <input type="text" id="cco" name="cco" placeholder="Nome do responsável">
-          <small id="ccoError">Por favor, insira o nome do responsável pela ocorrência no CCO</small>
+      <!-- General -->
+      <h3>General</h3>
+      <section class="form-section">
+        <h3>Grupo 1</h3>
+        <div class="field-group">
+          <!-- Group 1 Fields -->
+          <div class="field-column">
+            <label for="prat">PRAT</label>
+            <input type="text" id="prat" name="prat" placeholder="NÃO HOUVE" />
 
-          <label for="matricula">Matrícula</label>
-          <input type="text" id="matricula" name="matricula" placeholder="Matrícula do responsável">
-          <small id="matriculaError">Por favor, insira o nome do responsável pela ocorrência no CCO</small>
+            <label for="pmvt">PM VT</label>
+            <input type="text" id="pmvt" name="pmvt" placeholder="NÃO HOUVE" />
 
+            <label for="pmvtr">PM VTR</label>
+            <input
+              type="text"
+              id="pmvtr"
+              name="pmvtr"
+              placeholder="NÃO HOUVE"
+            />
 
-          <label for="operacional">Operacional</label>
-          <input type="text" id="operacional" name="operacional" placeholder="NÃO HOUVE">
-
-          <label for="matriculaOp">Matrícula OP</label>
-          <input type="text" id="matriculaOp" name="matriculaOp" placeholder="NÃO HOUVE">
-
-          <label for="moto">Moto</label>
-          <input type="text" id="moto" name="moto" placeholder="NÃO HOUVE">
+            <label for="bombeirosSamu">Bombeiros/Samu</label>
+            <input
+              type="text"
+              id="bombeirosSamu"
+              name="bombeiros_samu"
+              placeholder="NÃO HOUVE"
+            />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="form-section hidden" id="excel">
-      <h3>Linha do controle de ocorrências</h3>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Ocorrência Transwolff</th>
-              <th>Data</th>
-              <th>Status</th>
-              <th>Alerta</th>
-              <th>Vítima</th>
-              <th>Condutor</th>
-              <th>CPF</th>
-              <th>Prefixo</th>
-              <th>Linha</th>
-              <th>Incidente</th>
-              <th>Endereço</th>
-              <th>Operacional</th>
-              <th>B.O</th>
-              <th>Oc. SPTrans</th>
-              <th>Resp. SPTrans</th>
-              <th>Horário</th>
-              <th>Resp. COC de Abertura</th>
-              <th>Resp. COC de Fechamento</th>
-              <th>Email Enviado</th>
-              <th>Observação</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td id="td-nOc">6A0345/2026</td>
-              <td id="td-date">25/02/2026</td>
-              <td id="td-status">FECHADO</td>
-              <td id="td-alerta">NÃO HOUVE</td>
-              <td id="td-victimName">NÃO HOUVE</td>
-              <td id="td-driverName">ANDERSON SILVA DA CRUZ</td>
-              <td id="td-driverCpf">17621164808</td>
-              <td id="td-coletivo">66857</td>
-              <td id="td-linha">6074-10</td>
-              <td id="td-ocorrencia">COLETIVO X OUTROS</td>
-              <td id="td-logradouro">CANAL DO C</td>
-              <td id="td-operacional">NÃO HOUVE</td>
-              <td id="td-bo">NÃO HOUVE</td>
-              <td id="td-ocSptrans">NÃO HOUVE</td>
-              <td id="td-sptrans">NÃO HOUVE</td>
-              <td id="td-time">12:00</td>
-              <td id="td-cco">DAVID B.</td>
-              <td id="td-fechamento">-</td>
-              <td id="td-email">SIM</td>
-              <td id="td-obs">SEM MAIS</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <button class="button" id="copy" onclick="clear()">
+      <section class="form-section">
+        <h3>Grupo 2</h3>
+        <div class="field-group">
+          <!-- Group 2 Fields -->
+          <div class="field-column">
+            <label for="sptrans">SPTRANS</label>
+            <input
+              type="text"
+              id="sptrans"
+              name="sptrans"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="cet">CET</label>
+            <input type="text" id="cet" name="cet" placeholder="NÃO HOUVE" />
+
+            <label for="policiaCivil">Polícia Civil</label>
+            <input
+              type="text"
+              id="policiaCivil"
+              name="policia_civil"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="gcm">GCM</label>
+            <input type="text" id="gcm" name="gcm" placeholder="NÃO HOUVE" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Grupo 3</h3>
+        <div class="field-group">
+          <!-- Group 3 Fields -->
+          <div class="field-column">
+            <label for="bo">B.O</label>
+            <input type="text" id="bo" name="bo" placeholder="NÃO HOUVE" />
+
+            <label for="responsavelBo">Responsável pelo B.O</label>
+            <input
+              type="text"
+              id="responsavelBo"
+              name="responsavel_bo"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="pericia">Perícia</label>
+            <input
+              type="text"
+              id="pericia"
+              name="pericia"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="ocSptrans">OC. SPTRANS</label>
+            <input
+              type="text"
+              id="ocSptrans"
+              name="oc_sptrans"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="alerta">ALERTA</label>
+            <input
+              type="text"
+              id="alerta"
+              name="alerta"
+              placeholder="NÃO HOUVE"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Interno</h3>
+        <div class="field-group" id="interno">
+          <!-- Group 4 Fields -->
+          <div class="field-column">
+            <label for="cco">CCO (Responsável pela ocorrência)</label>
+            <input
+              type="text"
+              id="cco"
+              name="cco"
+              placeholder="Nome do responsável"
+            />
+            <small id="ccoError"
+              >Por favor, insira o nome do responsável pela ocorrência no
+              CCO</small
+            >
+
+            <label for="matricula">Matrícula</label>
+            <input
+              type="text"
+              id="matricula"
+              name="matricula"
+              placeholder="Matrícula do responsável"
+            />
+            <small id="matriculaError"
+              >Por favor, insira o nome do responsável pela ocorrência no
+              CCO</small
+            >
+
+            <label for="operacional">Operacional</label>
+            <input
+              type="text"
+              id="operacional"
+              name="operacional"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="matriculaOp">Matrícula OP</label>
+            <input
+              type="text"
+              id="matriculaOp"
+              name="matriculaOp"
+              placeholder="NÃO HOUVE"
+            />
+
+            <label for="moto">Moto</label>
+            <input type="text" id="moto" name="moto" placeholder="NÃO HOUVE" />
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Anexar Imagens / Prints</h3>
+
+        <div
+          id="paste-area"
+          tabindex="0"
+          style="
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+          "
+        >
+          <p style="margin: 0; pointer-events: none; color: #666">
+            <strong>Clique aqui</strong> ou arraste imagens para colar<br />
+          </p>
+        </div>
+
+        <p style="margin-top: 10px; font-size: 14px; color: #666">
+          <strong>Obs:</strong> Arquivos que estão no computador precisam ser
+          arrastados pra área de transferêbncia, copiar e colar não vai funcionar na maior parte das vezes.
+        </p>
+      </section>
+
+      <section class="form-section hidden" id="excel">
+        <h3>Linha do controle de ocorrências</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Ocorrência Transwolff</th>
+                <th>Data</th>
+                <th>Status</th>
+                <th>Alerta</th>
+                <th>Vítima</th>
+                <th>Condutor</th>
+                <th>CPF</th>
+                <th>Prefixo</th>
+                <th>Linha</th>
+                <th>Incidente</th>
+                <th>Endereço</th>
+                <th>Operacional</th>
+                <th>B.O</th>
+                <th>Oc. SPTrans</th>
+                <th>Resp. SPTrans</th>
+                <th>Horário</th>
+                <th>Resp. COC de Abertura</th>
+                <th>Resp. COC de Fechamento</th>
+                <th>Email Enviado</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td id="td-nOc">6A0345/2026</td>
+                <td id="td-date">25/02/2026</td>
+                <td id="td-status">FECHADO</td>
+                <td id="td-alerta">NÃO HOUVE</td>
+                <td id="td-victimName">NÃO HOUVE</td>
+                <td id="td-driverName">ANDERSON SILVA DA CRUZ</td>
+                <td id="td-driverCpf">17621164808</td>
+                <td id="td-coletivo">66857</td>
+                <td id="td-linha">6074-10</td>
+                <td id="td-ocorrencia">COLETIVO X OUTROS</td>
+                <td id="td-logradouro">CANAL DO C</td>
+                <td id="td-operacional">NÃO HOUVE</td>
+                <td id="td-bo">NÃO HOUVE</td>
+                <td id="td-ocSptrans">NÃO HOUVE</td>
+                <td id="td-sptrans">NÃO HOUVE</td>
+                <td id="td-time">12:00</td>
+                <td id="td-cco">DAVID B.</td>
+                <td id="td-fechamento">-</td>
+                <td id="td-email">SIM</td>
+                <td id="td-obs">SEM MAIS</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="button" id="copy" onclick="clear()">
+          <span class="shadow"></span>
+          <span class="edge"></span>
+          <div class="front">
+            <span>COPIAR LINHA</span>
+          </div>
+        </button>
+      </section>
+
+      <button class="button" id="generateWord">
         <span class="shadow"></span>
         <span class="edge"></span>
         <div class="front">
-          <span>COPIAR LINHA</span>
+          <span>GERAR WORD</span>
         </div>
       </button>
-    </section>
 
-    <button class="button" id="generateWord">
-      <span class="shadow"></span>
-      <span class="edge"></span>
-      <div class="front">
-        <span>GERAR WORD</span>
-      </div>
-    </button>
+      <button class="button" id="clear" onclick="clear()">
+        <span class="shadow"></span>
+        <span class="edge"></span>
+        <div class="front">
+          <span>LIMPAR</span>
+        </div>
+      </button>
 
-    <button class="button" id="clear" onclick="clear()">
-      <span class="shadow"></span>
-      <span class="edge"></span>
-      <div class="front">
-        <span>LIMPAR</span>
-      </div>
-    </button>
-
-    <button class="button" id="notes">
-      <span class="shadow"></span>
-      <span class="edge"></span>
-      <div class="front">
-        <span>ANOTAÇÕES</span>
-      </div>
-    </button>
-  </div>
-
-  <!-- Modal Container -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h2>Notes</h2>
-
-      <h3>CC (fixo para todos os e-mails):</h3>
-      <p>
-        Reinaldo Lima &lt;reinaldooperacional@wolffsp.com&gt;,
-        Roberto Belchior &lt;robertooperacional@wolffsp.com&gt;,
-        Celso Ribeiro &lt;celsooperacional@wolffsp.com&gt;,
-        Yvan Sguassabia Brayn &lt;yvanoperacional@wolffsp.com&gt;
-      </p>
-
-      <h3>6A → Sinistros sem danos ao patrimônio (coletivo):</h3>
-      <p>
-        Para: Mauricio Oliveira da Silva &lt;mauricio.oliveira@wolffsp.com&gt;,
-        Sinistro Transwolff &lt;sinistro@wolffsp.com&gt;,
-        Beatriz Alves Silva &lt;beatrizsinistro@wolffsp.com&gt;,
-        Gustavo Santos Fim &lt;gustavosinistro@wolffsp.com&gt;,
-        Maiane Lima Silva &lt;maianesinistro@wolffsp.com&gt;
-      </p>
-
-      <h3>6A → Sinistros com danos ao patrimônio (coletivo):</h3>
-      <p>
-        Para: Mauricio Oliveira da Silva &lt;mauricio.oliveira@wolffsp.com&gt;,
-        Sinistro Transwolff &lt;sinistro@wolffsp.com&gt;,
-        Beatriz Alves Silva &lt;beatrizsinistro@wolffsp.com&gt;,
-        Gustavo Santos Fim &lt;gustavosinistro@wolffsp.com&gt;,
-        Maiane Lima Silva &lt;maianesinistro@wolffsp.com&gt;,
-        Funilaria D10 &lt;funilariad10@wolffsp.com&gt;
-      </p>
-
-      <h3>6A → Sinistros com dados delicados (envolvendo o Prat) e sem danos ao patrimônio (coletivo):</h3>
-      <p>
-        Para: Mauricio Oliveira da Silva &lt;mauricio.oliveira@wolffsp.com&gt;,
-        Sinistro Transwolff &lt;sinistro@wolffsp.com&gt;,
-        Beatriz Alves Silva &lt;beatrizsinistro@wolffsp.com&gt;,
-        Gustavo Santos Fim &lt;gustavosinistro@wolffsp.com&gt;,
-        Maiane Lima Silva &lt;maianesinistro@wolffsp.com&gt;,
-        Treinamento Transwolff &lt;treinamento1@wolffsp.com&gt;
-      </p>
-
-      <h3>6A → Sinistros com dados delicados (envolvendo o Prat) e com danos ao patrimônio (coletivo):</h3>
-      <p>
-        Para: Mauricio Oliveira da Silva &lt;mauricio.oliveira@wolffsp.com&gt;,
-        Sinistro Transwolff &lt;sinistro@wolffsp.com&gt;,
-        Beatriz Alves Silva &lt;beatrizsinistro@wolffsp.com&gt;,
-        Gustavo Santos Fim &lt;gustavosinistro@wolffsp.com&gt;,
-        Maiane Lima Silva &lt;maianesinistro@wolffsp.com&gt;,
-        Treinamento Transwolff &lt;treinamento1@wolffsp.com&gt;,
-        Funilaria D10 &lt;funilariad10@wolffsp.com&gt;
-      </p>
-
-      <h3>6A → Sinistros relacionados a furto de periféricos do coletivo:</h3>
-      <p>
-        Para: Mauricio Oliveira da Silva &lt;mauricio.oliveira@wolffsp.com&gt;,
-        Sinistro Transwolff &lt;sinistro@wolffsp.com&gt;,
-        Beatriz Alves Silva &lt;beatrizsinistro@wolffsp.com&gt;,
-        Gustavo Santos Fim &lt;gustavosinistro@wolffsp.com&gt;,
-        Maiane Lima Silva &lt;maianesinistro@wolffsp.com&gt;,
-        Treinamento Transwolff &lt;treinamento1@wolffsp.com&gt;,
-        Funilaria D10 &lt;funilariad10@wolffsp.com&gt;,
-        Estoque Peças Garagem Teotônio Vilela &lt;estoquepecasd10@wolffsp.com&gt;
-      </p>
+      <button class="button" id="notes">
+        <span class="shadow"></span>
+        <span class="edge"></span>
+        <div class="front">
+          <span>ANOTAÇÕES</span>
+        </div>
+      </button>
     </div>
 
-  </div>
+    <!-- Modal Container -->
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <h2>Notes</h2>
 
-  <div class="fixed-box">
-    <p id="box-coletivo">Coletivo:</p>
-    <p id="box-condutor">Condutor:</p>
-    <p id="box-cpf">CPF:</p>
-    <p id="box-logradouro">Rua:</p>
-  </div>
+        <h3>CC (fixo para todos os e-mails):</h3>
+        <p>
+          Reinaldo Lima &lt;reinaldooperacional@wolffsp.com&gt;, Roberto
+          Belchior &lt;robertooperacional@wolffsp.com&gt;, Celso Ribeiro
+          &lt;celsooperacional@wolffsp.com&gt;, Yvan Sguassabia Brayn
+          &lt;yvanoperacional@wolffsp.com&gt;
+        </p>
 
-  <a class="back-home-btn" href="../../" aria-label="Back to home">
-    <!-- Inline wolf icon (replace with your own SVG if you have a brand mark) -->
-    <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
-      <!-- simplified wolf/fox head -->
-      <path fill="currentColor" d="M12 2l2.6 2.7L17 2l2 5.6V14l-3.8-1.6L12 20l-3.2-7.6L5 14V7.6L7 2l2.4 2.7L12 2z" />
-      <path fill="currentColor"
-        d="M8.4 9.8L6 12.4l3.3-.4L9 11c.3-.7-.1-1.5-.6-1.2zM15.6 9.8l.3 1.2 3.1.4-2.4-2.6c-.6-.3-1 .5-.6 1z" />
-    </svg>
-  </a>
+        <h3>6A → Sinistros sem danos ao patrimônio (coletivo):</h3>
+        <p>
+          Para: Mauricio Oliveira da Silva
+          &lt;mauricio.oliveira@wolffsp.com&gt;, Sinistro Transwolff
+          &lt;sinistro@wolffsp.com&gt;, Beatriz Alves Silva
+          &lt;beatrizsinistro@wolffsp.com&gt;, Gustavo Santos Fim
+          &lt;gustavosinistro@wolffsp.com&gt;, Maiane Lima Silva
+          &lt;maianesinistro@wolffsp.com&gt;
+        </p>
 
-  <!-- Fixed options panel (Acidentes) -->
-  <aside class="opts-panel" aria-labelledby="opts-a-title">
-    <h3 id="opts-a-title">OPÇÕES</h3>
+        <h3>6A → Sinistros com danos ao patrimônio (coletivo):</h3>
+        <p>
+          Para: Mauricio Oliveira da Silva
+          &lt;mauricio.oliveira@wolffsp.com&gt;, Sinistro Transwolff
+          &lt;sinistro@wolffsp.com&gt;, Beatriz Alves Silva
+          &lt;beatrizsinistro@wolffsp.com&gt;, Gustavo Santos Fim
+          &lt;gustavosinistro@wolffsp.com&gt;, Maiane Lima Silva
+          &lt;maianesinistro@wolffsp.com&gt;, Funilaria D10
+          &lt;funilariad10@wolffsp.com&gt;
+        </p>
 
-    <label class="sr-only" for="opt-action-a">Escolha uma opção</label>
-    <select id="opt-action-a" class="opts-select">
-      <option value="">— selecione —</option>
-      <option value="clear-all">LIMPAR TUDO</option>
-      <option value="colisao-veiculo" disabled aria-disabled="true" title="Em breve">COLISÃO X VEÍCULO</option>
-      <option value="colisao-coletivo" disabled aria-disabled="true" title="Em breve">COLISÃO X COLETIVO</option>
-      <option value="colisao-objeto" disabled aria-disabled="true" title="Em breve">COLISÃO X OBJETO</option>
-      <option value="avaria-coletivo">AVARIA NO COLETIVO</option>
-      <option value="geral">GERAL</option>
-    </select>
+        <h3>
+          6A → Sinistros com dados delicados (envolvendo o Prat) e sem danos ao
+          patrimônio (coletivo):
+        </h3>
+        <p>
+          Para: Mauricio Oliveira da Silva
+          &lt;mauricio.oliveira@wolffsp.com&gt;, Sinistro Transwolff
+          &lt;sinistro@wolffsp.com&gt;, Beatriz Alves Silva
+          &lt;beatrizsinistro@wolffsp.com&gt;, Gustavo Santos Fim
+          &lt;gustavosinistro@wolffsp.com&gt;, Maiane Lima Silva
+          &lt;maianesinistro@wolffsp.com&gt;, Treinamento Transwolff
+          &lt;treinamento1@wolffsp.com&gt;
+        </p>
 
+        <h3>
+          6A → Sinistros com dados delicados (envolvendo o Prat) e com danos ao
+          patrimônio (coletivo):
+        </h3>
+        <p>
+          Para: Mauricio Oliveira da Silva
+          &lt;mauricio.oliveira@wolffsp.com&gt;, Sinistro Transwolff
+          &lt;sinistro@wolffsp.com&gt;, Beatriz Alves Silva
+          &lt;beatrizsinistro@wolffsp.com&gt;, Gustavo Santos Fim
+          &lt;gustavosinistro@wolffsp.com&gt;, Maiane Lima Silva
+          &lt;maianesinistro@wolffsp.com&gt;, Treinamento Transwolff
+          &lt;treinamento1@wolffsp.com&gt;, Funilaria D10
+          &lt;funilariad10@wolffsp.com&gt;
+        </p>
 
-    <button id="opt-apply-a" type="button" class="opts-apply">APLICAR</button>
-  </aside>
+        <h3>6A → Sinistros relacionados a furto de periféricos do coletivo:</h3>
+        <p>
+          Para: Mauricio Oliveira da Silva
+          &lt;mauricio.oliveira@wolffsp.com&gt;, Sinistro Transwolff
+          &lt;sinistro@wolffsp.com&gt;, Beatriz Alves Silva
+          &lt;beatrizsinistro@wolffsp.com&gt;, Gustavo Santos Fim
+          &lt;gustavosinistro@wolffsp.com&gt;, Maiane Lima Silva
+          &lt;maianesinistro@wolffsp.com&gt;, Treinamento Transwolff
+          &lt;treinamento1@wolffsp.com&gt;, Funilaria D10
+          &lt;funilariad10@wolffsp.com&gt;, Estoque Peças Garagem Teotônio
+          Vilela &lt;estoquepecasd10@wolffsp.com&gt;
+        </p>
+      </div>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.8/dist/pizzip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.17.1/docxtemplater.js"></script>
-  <script src="app.js"></script>
-</body>
+    <div class="fixed-box">
+      <p id="box-coletivo">Coletivo:</p>
+      <p id="box-condutor">Condutor:</p>
+      <p id="box-cpf">CPF:</p>
+      <p id="box-logradouro">Rua:</p>
+    </div>
 
+    <a class="back-home-btn" href="../../" aria-label="Back to home">
+      <!-- Inline wolf icon (replace with your own SVG if you have a brand mark) -->
+      <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+        <!-- simplified wolf/fox head -->
+        <path
+          fill="currentColor"
+          d="M12 2l2.6 2.7L17 2l2 5.6V14l-3.8-1.6L12 20l-3.2-7.6L5 14V7.6L7 2l2.4 2.7L12 2z"
+        />
+        <path
+          fill="currentColor"
+          d="M8.4 9.8L6 12.4l3.3-.4L9 11c.3-.7-.1-1.5-.6-1.2zM15.6 9.8l.3 1.2 3.1.4-2.4-2.6c-.6-.3-1 .5-.6 1z"
+        />
+      </svg>
+    </a>
 
+    <!-- Fixed options panel (Acidentes) -->
+    <aside class="opts-panel" aria-labelledby="opts-a-title">
+      <h3 id="opts-a-title">OPÇÕES</h3>
+
+      <label class="sr-only" for="opt-action-a">Escolha uma opção</label>
+      <select id="opt-action-a" class="opts-select">
+        <option value="">— selecione —</option>
+        <option value="clear-all">LIMPAR TUDO</option>
+        <option
+          value="colisao-veiculo"
+          disabled
+          aria-disabled="true"
+          title="Em breve"
+        >
+          COLISÃO X VEÍCULO
+        </option>
+        <option
+          value="colisao-coletivo"
+          disabled
+          aria-disabled="true"
+          title="Em breve"
+        >
+          COLISÃO X COLETIVO
+        </option>
+        <option
+          value="colisao-objeto"
+          disabled
+          aria-disabled="true"
+          title="Em breve"
+        >
+          COLISÃO X OBJETO
+        </option>
+        <option value="avaria-coletivo">AVARIA NO COLETIVO</option>
+        <option value="geral">GERAL</option>
+      </select>
+
+      <button id="opt-apply-a" type="button" class="opts-apply">APLICAR</button>
+    </aside>
+
+    <script src="https://unpkg.com/pizzip@3.1.4/dist/pizzip.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.17.1/docxtemplater.js"></script>
+
+    <script src="imagemodule.js"></script>
+
+    <script src="app.js"></script>
+  </body>
 </html>
-
-
-
-

@@ -1,610 +1,622 @@
 /* ========================================================================== */
-/* Acidentes App - Refactored                                                 */
-/* - Namespaced localStorage (no cross-app collisions)                        */
-/* - Single init on DOMContentLoaded                                          */
-/* - Centralized event binding + guards                                       */
-/* - Same visible behavior / outputs                                          */
+/* Accident Report App - Versão Final com Drag & Drop e Multi-Paste           */
 /* ========================================================================== */
 
 (() => {
-  'use strict';
+  "use strict";
 
   /* ------------------------------------------------------------------------ */
-  /* Config                                                                   */
+  /* Config & State                                                           */
   /* ------------------------------------------------------------------------ */
-  const APP_NS = 'acidentes:'; // unique storage prefix for this app
-  const YEAR_SUFFIX = '2026';  // keep old behavior; set '' to auto from date
+  const APP_NS = "acidentes:";
+  const YEAR_SUFFIX = "2026";
+
+  const MAX_DOC_WIDTH = 680;
+  const MAX_DOC_HEIGHT = 800;
+
+  let attachedImages = [];
+  let imageDimensionsCache = {};
 
   /* ------------------------------------------------------------------------ */
-  /* DOM Utils                                                                */
+  /* DOM Utilities                                                            */
   /* ------------------------------------------------------------------------ */
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const byId = (id) => document.getElementById(id);
-
-  const hasEl = (id) => Boolean(byId(id));
-
-  const setText = (id, text) => { const el = byId(id); if (el) el.textContent = text; };
-
-  /* ------------------------------------------------------------------------ */
-  /* Storage (namespaced)                                                     */
-  /* ------------------------------------------------------------------------ */
-  const store = {
-    get(key) { return window.localStorage.getItem(APP_NS + key); },
-    set(key, v) { window.localStorage.setItem(APP_NS + key, v); },
-    remove(key) { window.localStorage.removeItem(APP_NS + key); },
-    clearAll() {
-      const toDelete = [];
-      for (let i = 0; i < window.localStorage.length; i++) {
-        const k = window.localStorage.key(i);
-        if (k && k.startsWith(APP_NS)) toDelete.push(k);
-      }
-      toDelete.forEach(k => window.localStorage.removeItem(k));
-    }
+  const nonEmpty = (v) => v != null && String(v).trim() !== "";
+  const setText = (id, text) => {
+    const el = byId(id);
+    if (el) el.textContent = text;
   };
 
   /* ------------------------------------------------------------------------ */
-  /* Persistence: save/restore inputs & textareas (and selects)               */
+  /* Storage                                                                  */
+  /* ------------------------------------------------------------------------ */
+  const store = {
+    get(key) {
+      return window.localStorage.getItem(APP_NS + key);
+    },
+    set(key, v) {
+      window.localStorage.setItem(APP_NS + key, v);
+    },
+    clearAll() {
+      for (let i = window.localStorage.length - 1; i >= 0; i--) {
+        const k = window.localStorage.key(i);
+        if (k && k.startsWith(APP_NS)) window.localStorage.removeItem(k);
+      }
+    },
+  };
+
+  /* ------------------------------------------------------------------------ */
+  /* Lógica de Imagem                                                         */
+  /* ------------------------------------------------------------------------ */
+
+  function base64DataURLToArrayBuffer(dataURL) {
+    const base64Regex = /^data:image\/\w+;base64,/;
+    if (!dataURL || !base64Regex.test(dataURL)) return null;
+    const stringBase64 = dataURL.replace(base64Regex, "");
+    const binaryString = window.atob(stringBase64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  function addImage(base64, width, height) {
+    if (imageDimensionsCache[base64]) return;
+
+    attachedImages.push({ src: base64, w: width, h: height });
+    imageDimensionsCache[base64] = { w: width, h: height };
+    renderGallery();
+  }
+
+  function processImageFile(blob) {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const base64 = evt.target.result;
+      const imgTemp = new Image();
+      imgTemp.onload = () => {
+        addImage(base64, imgTemp.naturalWidth, imgTemp.naturalHeight);
+      };
+      imgTemp.src = base64;
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  function renderGallery() {
+    const container = byId("paste-area");
+    if (!container) return;
+
+    // Limpa a galeria anterior
+    const existingGallery = container.querySelector(".img-preview-container");
+    if (existingGallery) existingGallery.remove();
+
+    // Se houver imagens, cria o container da galeria
+    if (attachedImages.length > 0) {
+      const gallery = document.createElement("div");
+      gallery.className = "img-preview-container";
+      gallery.style.cssText =
+        "display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; justify-content: center;";
+
+      attachedImages.forEach((item, index) => {
+        const wrap = document.createElement("div");
+        wrap.style.cssText = "position: relative; animation: fadeIn 0.3s ease;";
+
+        const img = document.createElement("img");
+        img.src = item.src;
+        img.style.cssText =
+          "height: 100px; border-radius: 4px; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); object-fit: cover;";
+
+        const btnRemove = document.createElement("button");
+        btnRemove.innerText = "X";
+        btnRemove.style.cssText =
+          "position: absolute; top: -8px; right: -8px; background: red; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);";
+
+        btnRemove.onclick = (e) => {
+          e.stopPropagation();
+          delete imageDimensionsCache[item.src];
+          attachedImages.splice(index, 1);
+          renderGallery();
+        };
+
+        wrap.appendChild(img);
+        wrap.appendChild(btnRemove);
+        gallery.appendChild(wrap);
+      });
+
+      container.appendChild(gallery);
+    }
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* Drag & Drop e Clipboard                                                  */
+  /* ------------------------------------------------------------------------ */
+
+  // 1. Processamento de Itens Colados (Clipboard)
+  async function handlePasteFromClipboard() {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      let found = false;
+
+      // Loop para processar MÚLTIPLOS itens
+      for (const item of clipboardItems) {
+        // Filtra imagens
+        const imageTypes = item.types.filter((type) =>
+          type.startsWith("image/")
+        );
+        for (const type of imageTypes) {
+          const blob = await item.getType(type);
+          processImageFile(blob);
+          found = true;
+        }
+      }
+
+      if (!found) alert("Nenhuma imagem encontrada na área de transferência.");
+    } catch (err) {
+      console.error(err);
+      // Fallback silencioso ou alerta opcional
+    }
+  }
+
+  // 2. Configuração da Área de Drag & Drop
+  function wireDragAndDrop(area) {
+    // Evita comportamento padrão (abrir a imagem no navegador)
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      area.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Feedback Visual (Adiciona classe CSS)
+    ["dragenter", "dragover"].forEach((eventName) => {
+      area.addEventListener(
+        eventName,
+        () => area.classList.add("dragging"),
+        false
+      );
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      area.addEventListener(
+        eventName,
+        () => area.classList.remove("dragging"),
+        false
+      );
+    });
+
+    // O Evento Drop Principal
+    area.addEventListener(
+      "drop",
+      (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files; // Lista de arquivos arrastados
+
+        if (files && files.length > 0) {
+          // Itera sobre todos os arquivos (suporte a múltiplos)
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file.type.startsWith("image/")) {
+              processImageFile(file);
+            }
+          }
+        }
+      },
+      false
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* Polyfills                                                                */
+  /* ------------------------------------------------------------------------ */
+  if (
+    typeof SVGElement !== "undefined" &&
+    !SVGElement.prototype.hasOwnProperty("namespaceURI")
+  ) {
+    Object.defineProperty(SVGElement.prototype, "namespaceURI", {
+      get: () => "http://www.w3.org/2000/svg",
+      set: () => {},
+    });
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /* Persistence & Validation                                                 */
   /* ------------------------------------------------------------------------ */
   function restoreField(el) {
     if (!el.id) return;
-    const saved = store.get(el.id);
-    if (saved === null) return;
-
-    if (el.type === 'checkbox') el.checked = saved === 'true';
-    else if (el.type === 'radio') el.checked = saved === 'true';
-    else el.value = saved;
+    const val = store.get(el.id);
+    if (val !== null)
+      el.type === "checkbox" || el.type === "radio"
+        ? (el.checked = val === "true")
+        : (el.value = val);
   }
-
   function persistField(el) {
-    if (!el.id) return;
-    if (el.type === 'checkbox' || el.type === 'radio') {
-      store.set(el.id, String(el.checked));
-    } else {
-      store.set(el.id, el.value.trim());
-    }
+    if (el.id)
+      store.set(
+        el.id,
+        el.type === "checkbox" || el.type === "radio"
+          ? String(el.checked)
+          : el.value.trim()
+      );
   }
-
-  function wirePersistence(root = document) {
-    const fields = $$('input[id], textarea[id], select[id]', root);
-    fields.forEach(el => {
+  function wirePersistence() {
+    $$("input[id], textarea[id], select[id]").forEach((el) => {
       restoreField(el);
-      el.addEventListener('input', () => persistField(el));
-      el.addEventListener('change', () => persistField(el));
+      el.addEventListener("input", () => persistField(el));
+      el.addEventListener("change", () => persistField(el));
     });
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Mini helpers                                                             */
-  /* ------------------------------------------------------------------------ */
-  const nonEmpty = (v) => v != null && String(v).trim() !== '';
-
-  function formatPtBrDate(yyyyMmDd) {
-    if (!nonEmpty(yyyyMmDd)) return '';
-    const [y, m, d] = yyyyMmDd.split('-').map(Number);
-    if (!y || !m || !d) return '';
-    const dt = new Date(y, m - 1, d);
-    if (Number.isNaN(dt.getTime())) return '';
-    return dt.toLocaleDateString('pt-BR').toUpperCase(); // e.g., 31/12/2025
-  }
-
-  function getYearSuffix(yyyyMmDd) {
-    if (YEAR_SUFFIX) return YEAR_SUFFIX;
-    if (nonEmpty(yyyyMmDd)) {
-      const y = Number(yyyyMmDd.slice(0, 4));
-      if (y) return String(y);
-    }
-    return String(new Date().getFullYear());
-  }
-
-  /* ------------------------------------------------------------------------ */
-  /* UI: live “box-*” mirrors                                                 */
-  /* ------------------------------------------------------------------------ */
-  const boxFieldMap = {
-    coletivo: 'box-coletivo',
-    logradouro: 'box-logradouro',
-    driverName: 'box-condutor',
-    driverCpf: 'box-cpf'
+  const validators = {
+    nOc: (el) =>
+      setValidity(
+        el,
+        /^6A\d{4}$/.test(el.value.toUpperCase()),
+        byId("nOcError")
+      ),
+    coletivo: (el) =>
+      setValidity(
+        el,
+        /^\d{5}( X \d{5})?$/.test(el.value.toUpperCase()),
+        byId("coletivoError")
+      ),
+    linha: (el) =>
+      setValidity(
+        el,
+        /^[A-Za-z0-9]{4}-[A-Za-z0-9]{2}$/.test(el.value),
+        byId("linhaError")
+      ),
+    time: (el) =>
+      setValidity(el, /^\d{2}:\d{2}$/.test(el.value), byId("timeError")),
+    numero: (el) =>
+      setValidity(el, /^(\d+|-)$/.test(el.value), byId("numeroError")),
+    generic: (el, errId) => setValidity(el, nonEmpty(el.value), byId(errId)),
   };
 
-  function updateBoxContent() {
-    Object.entries(boxFieldMap).forEach(([inputId, boxId]) => {
-      const input = byId(inputId);
-      const output = byId(boxId);
-      if (!input || !output) return;
-
-      const label = output.id.replace('box-', '');
-      output.innerHTML = `<span class="label">${label}:</span> ${input.value}`;
-    });
-  }
-
-  function wireBoxes() {
-    Object.keys(boxFieldMap).forEach((inputId) => {
-      const input = byId(inputId);
-      if (input) input.addEventListener('input', updateBoxContent);
-    });
-    updateBoxContent();
-  }
-
-  /* ------------------------------------------------------------------------ */
-  /* Validation                                                               */
-  /* Keep signatures identical; add guards; toggle .valid/.invalid + errors   */
-  /* ------------------------------------------------------------------------ */
   function setValidity(el, isValid, errorEl) {
     if (!el) return;
-    el.classList.toggle('invalid', !isValid);
-    el.classList.toggle('valid', isValid);
-    if (errorEl) errorEl.style.display = isValid ? 'none' : 'inline';
-  }
-
-  function validateNoc() {
-    const nOc = byId('nOc');
-    const nOcError = byId('nOcError');
-    if (!nOc) return;
-    nOc.value = nOc.value.toUpperCase();
-    const ok = /^6A\d{4}$/.test(nOc.value);
-    setValidity(nOc, ok, nOcError);
-  }
-
-  function validateOcorrencia() {
-    const el = byId('ocorrencia');
-    const err = byId('ocorrenciaError');
-    if (!el) return;
-    el.value = el.value.toUpperCase();
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateColetivo() {
-    const el = byId('coletivo');
-    const err = byId('coletivoError');
-    if (!el) return;
-    const ok = /^\d{5}( X \d{5})?$/.test(el.value.toUpperCase());
-    setValidity(el, ok, err);
-  }
-
-  function validateLinha() {
-    const el = byId('linha');
-    const err = byId('linhaError');
-    if (!el) return;
-    const ok = /^[A-Za-z0-9]{4}-[A-Za-z0-9]{2}$/.test(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateDate() {
-    const el = byId('date');
-    const err = byId('dateError');
-    if (!el) return;
-    const ok = nonEmpty(el.value); // rely on native date input for format
-    setValidity(el, ok, err);
-  }
-
-  function validateTime() {
-    const el = byId('time');
-    const err = byId('timeError');
-    if (!el) return;
-    const ok = /^\d{2}:\d{2}$/.test(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateLogradouro() {
-    const el = byId('logradouro');
-    const err = byId('logradouroError');
-    if (!el) return;
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateNumero() {
-    const el = byId('numero');
-    const err = byId('numeroError');
-    if (!el) return;
-    const ok = /^(\d+|-)$/.test(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateBairro() {
-    const el = byId('bairro');
-    const err = byId('bairroError');
-    if (!el) return;
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateInicioFato() {
-    const el = byId('inicioFato');
-    if (!el) return;
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok);
-  }
-
-  function validateDesfecho() {
-    const el = byId('desfecho');
-    if (!el) return;
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok);
-  }
-
-  function validateCco() {
-    const el = byId('cco');
-    const err = byId('ccoError');
-    if (!el) return;
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok, err);
-  }
-
-  function validateMatricula() {
-    const el = byId('matricula');
-    const err = byId('matriculaError');
-    if (!el) return;
-    const ok = nonEmpty(el.value);
-    setValidity(el, ok, err);
+    el.classList.toggle("invalid", !isValid);
+    el.classList.toggle("valid", isValid);
+    if (errorEl) errorEl.style.display = isValid ? "none" : "inline";
   }
 
   function wireValidators() {
     const map = {
-      nOc: validateNoc,
-      coletivo: validateColetivo,
-      linha: validateLinha,
-      date: validateDate,
-      time: validateTime,
-      numero: validateNumero,
-      ocorrencia: validateOcorrencia,
-      logradouro: validateLogradouro,
-      bairro: validateBairro,
-      inicioFato: validateInicioFato,
-      desfecho: validateDesfecho,
-      cco: validateCco,
-      matricula: validateMatricula,
+      nOc: "nOc",
+      coletivo: "coletivo",
+      linha: "linha",
+      time: "time",
+      numero: "numero",
     };
-    Object.entries(map).forEach(([id, fn]) => {
+    Object.entries(map).forEach(([id, type]) => {
       const el = byId(id);
-      if (el) el.addEventListener('blur', fn);
+      if (el)
+        el.addEventListener("blur", () => {
+          el.value = el.value.toUpperCase();
+          validators[type](el);
+        });
     });
+    ["ocorrencia", "date", "logradouro", "bairro", "cco", "matricula"].forEach(
+      (id) => {
+        const el = byId(id);
+        if (el)
+          el.addEventListener("blur", () => {
+            el.value = el.value.toUpperCase();
+            validators.generic(el, id + "Error");
+          });
+      }
+    );
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Template loader (Docx)                                                   */
-  /* ------------------------------------------------------------------------ */
+  function formatPtBrDate(ymd) {
+    if (!ymd) return "";
+    const [y, m, d] = ymd.split("-");
+    return new Date(y, m - 1, d).toLocaleDateString("pt-BR");
+  }
+
+  function getYearSuffix(ymd) {
+    return ymd ? ymd.split("-")[0] : "2026";
+  }
+
+  function wireBoxes() {
+    const map = {
+      coletivo: "box-coletivo",
+      logradouro: "box-logradouro",
+      driverName: "box-condutor",
+      driverCpf: "box-cpf",
+    };
+    const update = () =>
+      Object.entries(map).forEach(([inp, out]) => {
+        if (byId(inp) && byId(out))
+          byId(out).innerHTML = `<span class="label">${byId(out).id.replace(
+            "box-",
+            ""
+          )}:</span> ${byId(inp).value}`;
+      });
+    Object.keys(map).forEach((id) =>
+      byId(id)?.addEventListener("input", update)
+    );
+    update();
+  }
+
   async function loadTemplate() {
-    const res = await fetch('template.docx');
-    if (!res.ok) throw new Error('Failed to load template');
+    const res = await fetch("template.docx");
+    if (!res.ok) throw new Error("Failed to load template");
     return res.arrayBuffer();
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Clear UI + storage                                                       */
-  /* ------------------------------------------------------------------------ */
   function clearAll() {
     store.clearAll();
-    $$('input, textarea, select').forEach(input => {
-      if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
-      else input.value = '';
+    $$("input, textarea, select").forEach((el) => {
+      if (el.type === "checkbox") el.checked = false;
+      else el.value = "";
     });
-    const excel = byId('excel');
-    if (excel) excel.classList.add('hidden');
+    attachedImages = [];
+    imageDimensionsCache = {};
+    renderGallery();
+    byId("excel")?.classList.add("hidden");
   }
 
   /* ------------------------------------------------------------------------ */
-  /* Modal (notes)                                                            */
-  /* ------------------------------------------------------------------------ */
-  function wireModal() {
-    const modal = byId('modal');
-    const notesButton = byId('notes');
-    if (!modal || !notesButton) return;
-
-    notesButton.addEventListener('click', () => modal.classList.add('show'));
-
-    modal.addEventListener('click', (evt) => {
-      const content = $('.modal-content', modal) || modal;
-      if (!content.contains(evt.target)) modal.classList.remove('show');
-    });
-  }
-
-  /* ------------------------------------------------------------------------ */
-  /* Generate Word (Docxtemplater + PizZip)                                   */
+  /* Generate Word Logic                                                      */
   /* ------------------------------------------------------------------------ */
   async function handleGenerateWord() {
     try {
-      // Gather + normalize (UPPERCASE where required downstream)
-      const nOc = (byId('nOc')?.value || '').toUpperCase();
-      const ocorrencia = (byId('ocorrencia')?.value || '').toUpperCase();
-      const coletivo = (byId('coletivo')?.value || '').toUpperCase();
-      const linha = (byId('linha')?.value || '').toUpperCase();
-      const dateRaw = (byId('date')?.value || '');
-      const time = (byId('time')?.value || '').toUpperCase();
-      const logradouro = (byId('logradouro')?.value || '').toUpperCase();
-      let numero = (byId('numero')?.value || '').toUpperCase();
-      const bairro = (byId('bairro')?.value || '').toUpperCase();
-      const inicioFato = (byId('inicioFato')?.value || '').trim().toUpperCase();
-      const desfecho = (byId('desfecho')?.value || '').trim().toUpperCase();
-      const driverName = (byId('driverName')?.value || '').toUpperCase();
-      const driverCpf = (byId('driverCpf')?.value || '').toUpperCase();
-      const driverSituation = (byId('driverSituation')?.value || '').toUpperCase();
+      const getVal = (id) => (byId(id)?.value || "").toUpperCase().trim();
 
-      let victimName = (byId('victimName')?.value || '').toUpperCase();
-      let victimDocumentation = (byId('victimDocumentation')?.value || '').toUpperCase();
-      let victimSituation = (byId('victimSituation')?.value || '').toUpperCase();
-      let victimContact = (byId('victimContact')?.value || '').toUpperCase();
+      const inputs = {
+        nOc: getVal("nOc"),
+        ocorrencia: getVal("ocorrencia"),
+        coletivo: getVal("coletivo"),
+        linha: getVal("linha"),
+        dateRaw: byId("date")?.value || "",
+        time: getVal("time"),
+        logradouro: getVal("logradouro"),
+        numero: getVal("numero"),
+        bairro: getVal("bairro"),
+        inicioFato: getVal("inicioFato"),
+        desfecho: getVal("desfecho"),
+        driverName: getVal("driverName"),
+        driverCpf: getVal("driverCpf"),
+        driverSituation: getVal("driverSituation"),
+        cco: getVal("cco"),
+        matricula: getVal("matricula"),
+      };
 
-      let thirdPartyName = (byId('thirdPartyName')?.value || '').toUpperCase();
-      let thirdPartyDocumentation = (byId('thirdPartyDocumentation')?.value || '').toUpperCase();
-      let thirdPartyContact = (byId('thirdPartyContact')?.value || '').toUpperCase();
+      const extras = [
+        "victimName",
+        "victimDocumentation",
+        "victimSituation",
+        "victimContact",
+        "thirdPartyName",
+        "thirdPartyDocumentation",
+        "thirdPartyContact",
+        "witnessName",
+        "witnessDocumentation",
+        "witnessContact",
+        "witnessEmail",
+        "prat",
+        "pmvt",
+        "pmvtr",
+        "bombeirosSamu",
+        "sptrans",
+        "cet",
+        "policiaCivil",
+        "gcm",
+        "bo",
+        "responsavelBo",
+        "pericia",
+        "ocSptrans",
+        "alerta",
+        "operacional",
+        "matriculaOp",
+        "moto",
+      ];
 
-      let witnessName = (byId('witnessName')?.value || '').toUpperCase();
-      let witnessDocumentation = (byId('witnessDocumentation')?.value || '').toUpperCase();
-      let witnessContact = (byId('witnessContact')?.value || '').toUpperCase();
-      let witnessEmail = (byId('witnessEmail')?.value || '').toUpperCase();
+      const extraData = {};
+      extras.forEach((f) => (extraData[f] = getVal(f) || "NÃO HOUVE"));
 
-      let prat = (byId('prat')?.value || '').toUpperCase();
-      let pmvt = (byId('pmvt')?.value || '').toUpperCase();
-      let pmvtr = (byId('pmvtr')?.value || '').toUpperCase();
-      let bombeirosSamu = (byId('bombeirosSamu')?.value || '').toUpperCase();
-      let sptrans = (byId('sptrans')?.value || '').toUpperCase();
-      let cet = (byId('cet')?.value || '').toUpperCase();
-      let policiaCivil = (byId('policiaCivil')?.value || '').toUpperCase();
-      let gcm = (byId('gcm')?.value || '').toUpperCase();
-      let bo = (byId('bo')?.value || '').toUpperCase();
-      let responsavelBo = (byId('responsavelBo')?.value || '').toUpperCase();
-      let pericia = (byId('pericia')?.value || '').toUpperCase();
-      let ocSptrans = (byId('ocSptrans')?.value || '').toUpperCase();
-      let alerta = (byId('alerta')?.value || '').toUpperCase();
+      if (!inputs.nOc) return alert("Erro: Preencha o Nº OC.");
+      if (!inputs.ocorrencia) return alert("Erro: Preencha a Ocorrência.");
 
-      const cco = (byId('cco')?.value || '').toUpperCase();
-      const matricula = (byId('matricula')?.value || '').toUpperCase();
-      let operacional = (byId('operacional')?.value || '').toUpperCase();
-      let matriculaOp = (byId('matriculaOp')?.value || '').toUpperCase();
-      let moto = (byId('moto')?.value || '').toUpperCase();
+      const dateFmt = formatPtBrDate(inputs.dateRaw);
+      const year = getYearSuffix(inputs.dateRaw);
 
-      // Basic required checks (keep same alerts/messages)
-      if (!nOc) return alert('Insira um numero de ocorrência. Ex: 6A1234');
-      if (!ocorrencia) return alert('Insira um tipo de ocorrência. Ex: Coletivo X ...');
-      if (!coletivo) return alert('Insira um coletivo. Ex: 66123');
-      if (!linha) return alert('Insira uma linha. Ex: 6666-66');
-      const dateFmt = formatPtBrDate(dateRaw);
-      if (!dateFmt) return alert('Insira uma data válida para a ocorrência');
-      if (!time) return alert('Insira um horário válido para o momento que ocorreu o incidente');
-      if (!logradouro) return alert('Insira um endereço para o ocorrido');
-      if (!numero) return alert('Insira um numero para o logradouro');
-      if (!bairro) return alert('Insira um bairro para o logradouro');
-      if (!inicioFato) return alert('Insira corpo da ocorrência');
-      if (!desfecho) return alert('Insira o desfecho da ocorrência');
-      if (!driverName) return alert('Insira o nome do condutor');
-      if (!driverCpf) return alert('Insira o CPF do condutor');
-      if (!driverSituation) return alert('Insira a situação do condutor');
-      if (!cco) return alert('Insira o nome do responsável do CCO pela elaboração da ocorrência');
-      if (!matricula) return alert('Insira a matricula do responsável do CCO pela elaboração da ocorrência');
+      const imageOpts = {
+        centered: false,
+        getImage: (tagValue) =>
+          base64DataURLToArrayBuffer(tagValue) || new ArrayBuffer(0),
 
-      // Defaults "NÃO HOUVE"
-      const DH = 'NÃO HOUVE';
-      victimName = victimName || DH;
-      victimDocumentation = victimDocumentation || DH;
-      victimSituation = victimSituation || DH;
-      victimContact = victimContact || DH;
-      thirdPartyName = thirdPartyName || DH;
-      thirdPartyDocumentation = thirdPartyDocumentation || DH;
-      thirdPartyContact = thirdPartyContact || DH;
-      witnessName = witnessName || DH;
-      witnessDocumentation = witnessDocumentation || DH;
-      witnessContact = witnessContact || DH;
-      witnessEmail = witnessEmail || DH;
-      prat = prat || DH;
-      pmvt = pmvt || DH;
-      pmvtr = pmvtr || DH;
-      bombeirosSamu = bombeirosSamu || DH;
-      sptrans = sptrans || DH;
-      cet = cet || DH;
-      policiaCivil = policiaCivil || DH;
-      gcm = gcm || DH;
-      bo = bo || DH;
-      responsavelBo = responsavelBo || DH;
-      pericia = pericia || DH;
-      ocSptrans = ocSptrans || DH;
-      alerta = alerta || DH;
-      operacional = operacional || DH;
-      matriculaOp = matriculaOp || DH;
-      moto = moto || DH;
+        getSize: function (img, tagValue) {
+          const dims = imageDimensionsCache[tagValue];
+          if (!dims) return [500, 300];
 
-      // Load template & render
+          let { w, h } = dims;
+
+          if (w > MAX_DOC_WIDTH) {
+            const ratio = MAX_DOC_WIDTH / w;
+            w = MAX_DOC_WIDTH;
+            h = h * ratio;
+          }
+          if (h > MAX_DOC_HEIGHT) {
+            const ratio = MAX_DOC_HEIGHT / h;
+            h = MAX_DOC_HEIGHT;
+            w = w * ratio;
+          }
+          return [w, h];
+        },
+      };
+
+      let imageModule = null;
+      if (window.ImageModule) imageModule = new window.ImageModule(imageOpts);
+
       const content = await loadTemplate();
       const zip = new PizZip(content);
-      const doc = new docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+      const doc = new docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+        modules: imageModule ? [imageModule] : [],
+      });
 
-      const year = getYearSuffix(dateRaw);
+      const fotosData =
+        attachedImages.length > 0
+          ? attachedImages.map((img) => ({ imagem: img.src }))
+          : [];
 
       doc.setData({
-        nOc: `${nOc}/${year}`,
-        ocorrencia, coletivo, linha,
+        ...inputs,
+        ...extraData,
+        nOc: `${inputs.nOc}/${year}`,
         date: dateFmt,
-        time,
-        logradouro, numero, bairro,
-        inicioFato, desfecho,
-        driverName, driverCpf, driverSituation,
-        victimName, victimDocumentation, victimSituation, victimContact,
-        thirdPartyName, thirdPartyDocumentation, thirdPartyContact,
-        witnessName, witnessDocumentation, witnessContact, witnessEmail,
-        prat, pmvt, pmvtr, bombeirosSamu, sptrans, cet, policiaCivil, gcm,
-        bo, responsavelBo, pericia, ocSptrans, alerta,
-        cco, matricula, operacional, matriculaOp, moto
+        fotos: fotosData,
       });
 
       doc.render();
 
-      const blob = new Blob(
-        [doc.getZip().generate({ type: 'arraybuffer' })],
-        { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
-      );
+      const blob = doc.getZip().generate({
+        type: "blob",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
 
-      const nomeOcorrencia =
-        `${nOc} - ${dateFmt.replace(/\//g, '.').slice(0, 5)} - ${linha} - ${coletivo} - ${ocorrencia} - ${logradouro}`;
+      const fileName = `${inputs.nOc} - ${dateFmt
+        .replace(/\//g, ".")
+        .slice(0, 5)} - ${inputs.linha} - ${inputs.coletivo} - ${
+        inputs.ocorrencia
+      } - ${inputs.logradouro}.docx`;
 
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `${nomeOcorrencia}.docx`;
+      link.download = fileName;
       link.click();
 
-      // Fill preview table (if present)
-      setText('td-nOc', `${nOc}/${year}`);
-      setText('td-date', dateFmt);
-      setText('td-alerta', alerta);
-      setText('td-victimName', victimName);
-      setText('td-driverName', driverName);
-      setText('td-driverCpf', driverCpf);
-      setText('td-coletivo', coletivo);
-      setText('td-linha', linha);
-      setText('td-ocorrencia', ocorrencia);
-      setText('td-logradouro', logradouro);
-      setText('td-operacional', operacional);
-      setText('td-bo', bo);
-      setText('td-ocSptrans', ocSptrans);
-      setText('td-sptrans', sptrans);
-      setText('td-time', time);
-      setText('td-cco', cco);
-      setText('td-fechamento', cco);
+      setText("td-nOc", `${inputs.nOc}/${year}`);
+      setText("td-date", dateFmt);
+      setText("td-alerta", extraData.alerta);
+      setText("td-victimName", extraData.victimName);
+      setText("td-driverName", inputs.driverName);
+      setText("td-driverCpf", inputs.driverCpf);
+      setText("td-coletivo", inputs.coletivo);
+      setText("td-linha", inputs.linha);
+      setText("td-ocorrencia", inputs.ocorrencia);
+      setText("td-logradouro", inputs.logradouro);
+      setText("td-operacional", extraData.operacional);
+      setText("td-bo", extraData.bo);
+      setText("td-ocSptrans", extraData.ocSptrans);
+      setText("td-sptrans", extraData.sptrans);
+      setText("td-time", inputs.time);
+      setText("td-cco", inputs.cco);
+      setText("td-fechamento", inputs.cco);
 
-      const excel = byId('excel');
-      if (excel) excel.classList.remove('hidden');
+      byId("excel")?.classList.remove("hidden");
     } catch (err) {
-      console.error('Error generating document:', err);
-      alert('Error generating document: ' + err.message);
+      console.error(err);
+      alert(
+        "Erro ao gerar: " +
+          (err.properties?.errors?.map((e) => e.message).join("\n") ||
+            err.message)
+      );
     }
   }
 
   /* ------------------------------------------------------------------------ */
-  /* Copy first row to clipboard (Excel-friendly)                              */
-  /* ------------------------------------------------------------------------ */
-  function handleCopyRow() {
-    const row = $('#excel tbody tr');
-    if (!row) return;
-
-    const text = $$('#excel tbody tr:first-child td')
-      .map(td => td.innerText)
-      .join('\t');
-
-    navigator.clipboard.writeText(text)
-      .then(() => alert('Linha copiada!'))
-      .catch(err => console.error('Erro ao copiar:', err));
-  }
-
-  /* ------------------------------------------------------------------------ */
-  /* Wire buttons                                                              */
+  /* Actions & Options                                                        */
   /* ------------------------------------------------------------------------ */
   function wireActions() {
-    const clearBtn = byId('clear');
-    if (clearBtn) clearBtn.addEventListener('click', (e) => {
+    byId("clear")?.addEventListener("click", (e) => {
       e.preventDefault();
       clearAll();
     });
+    byId("generateWord")?.addEventListener("click", handleGenerateWord);
 
-    const genBtn = byId('generateWord');
-    if (genBtn) genBtn.addEventListener('click', handleGenerateWord);
+    byId("copy")?.addEventListener("click", () => {
+      const row = $("#excel tbody tr");
+      if (row)
+        navigator.clipboard
+          .writeText(row.innerText)
+          .then(() => alert("Copiado!"));
+    });
 
-    const copyBtn = byId('copy');
-    if (copyBtn) copyBtn.addEventListener('click', handleCopyRow);
-  }
+    const pasteArea = byId("paste-area");
+    if (pasteArea) {
+      // 1. Clique Simples: Tenta colar do clipboard
+      pasteArea.addEventListener("click", handlePasteFromClipboard);
 
-  /* ------------------------------------------------------------------------ */
-  /* Options panel (Acidentes)                                                */
-  /* ------------------------------------------------------------------------ */
+      // 2. Drag & Drop (NOVA FUNÇÃO)
+      wireDragAndDrop(pasteArea);
 
-  function setValA(id, value) {
-    const el = byId(id);
-    if (!el) return;
-    el.value = value;
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-
-  function fillOnlyOcorrencia(text) {
-    setValA('ocorrencia', text);
-  }
-
-  function fillAvariaColetivo() {
-    setValA('ocorrencia', 'AVARIA NO COLETIVO');
-    setValA('logradouro', 'GARAGEM UNIÃO');
-    setValA('numero', '244');
-    setValA('bairro', 'JARDIM GUANABARA');
-
-    // driver fields
-    setValA('driverName', 'NÃO CABE');
-    setValA('driverCpf', '-');
-    setValA('driverSituation', '-');
-
-    // body + outcome
-    setValA('inicioFato',
-      `INSPETOR OPERACIONAL __________ INFORMA, TRATA-SE DE UMA AVARIA ENCONTRADA NO COLETIVO ______, DENTRO DA GARAGEM UNIÃO, COLETIVO FOI ENCONTRADO PELO OPERACIONAL ÀS _________, NO ____________ COM A ______________ DANIFICADA.`);
-    setValA('desfecho', 'OPERACIONAL ___________ COMPARECEU AO CCO PARA INFORMAR SOBRE A AVARIA.');
-  }
-
-  function fillGeralAcidentes() {
-    setValA('inicioFato',
-      `INSPETOR OPERACIONAL _____________ RELATA, TRATA-SE DE ______________, ENVOLVENDO O COLETIVO ______________, CONDUZIDO POR ______________________, PORTADOR DO CPF: ___________________, O MESMO RELATA _______________________________.
-
-NA ANÁLISE DAS CÂMERAS, __________________________________________.`);
-  }
-
-  function isDisabledOption(selectEl, value) {
-    const opt = Array.from(selectEl.options).find(o => o.value === value);
-    // Treat unknown or explicitly disabled as unavailable
-    return !opt || opt.disabled;
-  }
-
-
-  function applyOptionAcidentes() {
-    const sel = byId('opt-action-a');
-    if (!sel) return;
-
-    const choice = sel.value;
-    if (!choice) return;
-
-    // Don’t act on disabled/placeholder items
-    if (isDisabledOption(sel, choice)) {
-      sel.value = ''; // reset to placeholder
-      sel.dispatchEvent(new Event('change', { bubbles: true }));
-      return;
+      // 3. Ctrl+V focado na área (Fallback)
+      pasteArea.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        // Loop corrigido para pegar múltiplos itens, se houver
+        for (let item of items) {
+          if (item.kind === "file" && item.type.includes("image/")) {
+            processImageFile(item.getAsFile());
+          }
+        }
+      });
     }
 
-    // Prep form
-    clearAll();
+    byId("notes")?.addEventListener("click", () =>
+      byId("modal").classList.add("show")
+    );
+    byId("modal")?.addEventListener("click", (e) => {
+      if (!$(".modal-content").contains(e.target))
+        byId("modal").classList.remove("show");
+    });
 
-    // Restore user selection after clear
-    sel.value = choice;
-    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    const optBtn = byId("opt-apply-a");
+    if (optBtn)
+      optBtn.addEventListener("click", () => {
+        const sel = byId("opt-action-a");
+        const val = sel?.value;
+        if (!val || val === "clear-all") return;
 
-    switch (choice) {
-      case 'clear-all':
-        // already cleared by applyOptionAcidentes() pre-step; nothing else to fill
-        break;
-      case 'avaria-coletivo':
-        fillAvariaColetivo();
-        break;
-      case 'geral':
-        fillGeralAcidentes();
-        break;
-      default:
-        // Unhandled options are considered inactive
-        break;
-    }
+        const setV = (id, v) => {
+          const el = byId(id);
+          if (el) {
+            el.value = v;
+            el.dispatchEvent(new Event("input"));
+          }
+        };
+
+        clearAll();
+        sel.value = val;
+
+        if (val === "avaria-coletivo") {
+          setV("ocorrencia", "AVARIA NO COLETIVO");
+          setV("logradouro", "GARAGEM UNIÃO");
+          setV("numero", "244");
+          setV("bairro", "JARDIM GUANABARA");
+          setV("driverName", "NÃO CABE");
+          setV("driverCpf", "-");
+          setV("driverSituation", "-");
+          setV(
+            "inicioFato",
+            `INSPETOR OPERACIONAL __________ INFORMA, TRATA-SE DE UMA AVARIA ENCONTRADA NO COLETIVO ______, DENTRO DA GARAGEM UNIÃO, COLETIVO FOI ENCONTRADO PELO OPERACIONAL ÀS _________, NO ____________ COM A ______________ DANIFICADA.`
+          );
+          setV(
+            "desfecho",
+            "OPERACIONAL ___________ COMPARECEU AO CCO PARA INFORMAR SOBRE A AVARIA."
+          );
+        } else if (val === "geral") {
+          setV(
+            "inicioFato",
+            `INSPETOR OPERACIONAL _____________ RELATA, TRATA-SE DE ______________, ENVOLVENDO O COLETIVO ______________, CONDUZIDO POR ______________________, PORTADOR DO CPF: ___________________, O MESMO RELATA _______________________________. \n\nNA ANÁLISE DAS CÂMERAS, __________________________________________.`
+          );
+        }
+      });
   }
 
-
-  function wireOptionsPanelAcidentes() {
-    const btn = byId('opt-apply-a');
-    if (btn) btn.addEventListener('click', applyOptionAcidentes);
-  }
-
-  /* ------------------------------------------------------------------------ */
-  /* Init                                                                      */
-  /* ------------------------------------------------------------------------ */
   function init() {
     wirePersistence();
     wireBoxes();
     wireValidators();
-    wireModal();
     wireActions();
-    wireOptionsPanelAcidentes();
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener("DOMContentLoaded", init);
 })();
-
