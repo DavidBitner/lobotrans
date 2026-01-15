@@ -475,3 +475,16 @@ td {
   border-style: solid !important;
   transform: scale(1.02);
 }
+
+/* Estado de carregamento para a área de transferência */
+#paste-area.loading {
+  cursor: wait; /* Mostra a ampulheta/círculo de carga */
+  background-color: #e0e0e0;
+  opacity: 0.7;
+  pointer-events: none; /* Evita cliques duplos enquanto processa */
+}
+
+#paste-area.loading p {
+  color: #333;
+  font-weight: bold;
+}

@@ -1,5 +1,5 @@
 /* ========================================================================== */
-/* Accident Report App - Versão Final com Drag & Drop e Multi-Paste           */
+/* Accident Report App - Final Version with Drag & Drop and Multi-Paste       */
 /* ========================================================================== */
 
 (() => {
@@ -24,13 +24,14 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const byId = (id) => document.getElementById(id);
   const nonEmpty = (v) => v != null && String(v).trim() !== "";
+
   const setText = (id, text) => {
     const el = byId(id);
     if (el) el.textContent = text;
   };
 
   /* ------------------------------------------------------------------------ */
-  /* Storage                                                                  */
+  /* Storage (LocalStorage Wrapper)                                           */
   /* ------------------------------------------------------------------------ */
   const store = {
     get(key) {
@@ -48,22 +49,26 @@
   };
 
   /* ------------------------------------------------------------------------ */
-  /* Lógica de Imagem                                                         */
+  /* Image Processing Logic                                                   */
   /* ------------------------------------------------------------------------ */
 
   function base64DataURLToArrayBuffer(dataURL) {
     const base64Regex = /^data:image\/\w+;base64,/;
     if (!dataURL || !base64Regex.test(dataURL)) return null;
+
     const stringBase64 = dataURL.replace(base64Regex, "");
     const binaryString = window.atob(stringBase64);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
     return bytes.buffer;
   }
 
   function addImage(base64, width, height) {
-    if (imageDimensionsCache[base64]) return;
+    if (imageDimensionsCache[base64]) return; // Avoid duplicates
 
     attachedImages.push({ src: base64, w: width, h: height });
     imageDimensionsCache[base64] = { w: width, h: height };
@@ -87,11 +92,10 @@
     const container = byId("paste-area");
     if (!container) return;
 
-    // Limpa a galeria anterior
+    // Reset container
     const existingGallery = container.querySelector(".img-preview-container");
     if (existingGallery) existingGallery.remove();
 
-    // Se houver imagens, cria o container da galeria
     if (attachedImages.length > 0) {
       const gallery = document.createElement("div");
       gallery.className = "img-preview-container";
@@ -129,18 +133,23 @@
   }
 
   /* ------------------------------------------------------------------------ */
-  /* Drag & Drop e Clipboard                                                  */
+  /* Drag & Drop and Clipboard Handling                                       */
   /* ------------------------------------------------------------------------ */
 
-  // 1. Processamento de Itens Colados (Clipboard)
   async function handlePasteFromClipboard() {
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      let found = false;
+    const container = byId("paste-area");
+    const textP = container.querySelector("p");
+    const originalText = textP.innerHTML;
 
-      // Loop para processar MÚLTIPLOS itens
+    try {
+      // Set loading state due to potential system I/O latency
+      container.classList.add("loading");
+      textP.innerHTML = "Lendo área de transferência...";
+
+      const clipboardItems = await navigator.clipboard.read();
+
+      let found = false;
       for (const item of clipboardItems) {
-        // Filtra imagens
         const imageTypes = item.types.filter((type) =>
           type.startsWith("image/")
         );
@@ -151,16 +160,19 @@
         }
       }
 
-      if (!found) alert("Nenhuma imagem encontrada na área de transferência.");
+      if (!found) {
+        alert("Nenhuma imagem encontrada na área de transferência.");
+      }
     } catch (err) {
-      console.error(err);
-      // Fallback silencioso ou alerta opcional
+      console.error("Clipboard access error:", err);
+    } finally {
+      container.classList.remove("loading");
+      textP.innerHTML = originalText;
     }
   }
 
-  // 2. Configuração da Área de Drag & Drop
   function wireDragAndDrop(area) {
-    // Evita comportamento padrão (abrir a imagem no navegador)
+    // Prevent default browser behavior (e.g., opening file in tab)
     ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
       area.addEventListener(eventName, preventDefaults, false);
     });
@@ -170,7 +182,7 @@
       e.stopPropagation();
     }
 
-    // Feedback Visual (Adiciona classe CSS)
+    // Visual feedback handlers
     ["dragenter", "dragover"].forEach((eventName) => {
       area.addEventListener(
         eventName,
@@ -187,15 +199,14 @@
       );
     });
 
-    // O Evento Drop Principal
+    // Handle Drop
     area.addEventListener(
       "drop",
       (e) => {
         const dt = e.dataTransfer;
-        const files = dt.files; // Lista de arquivos arrastados
+        const files = dt.files;
 
         if (files && files.length > 0) {
-          // Itera sobre todos os arquivos (suporte a múltiplos)
           for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (file.type.startsWith("image/")) {
@@ -211,6 +222,7 @@
   /* ------------------------------------------------------------------------ */
   /* Polyfills                                                                */
   /* ------------------------------------------------------------------------ */
+  // Fix for legacy ImageModule in modern browsers
   if (
     typeof SVGElement !== "undefined" &&
     !SVGElement.prototype.hasOwnProperty("namespaceURI")
@@ -232,6 +244,7 @@
         ? (el.checked = val === "true")
         : (el.value = val);
   }
+
   function persistField(el) {
     if (el.id)
       store.set(
@@ -241,6 +254,7 @@
           : el.value.trim()
       );
   }
+
   function wirePersistence() {
     $$("input[id], textarea[id], select[id]").forEach((el) => {
       restoreField(el);
@@ -298,6 +312,7 @@
           validators[type](el);
         });
     });
+    // Generic validation for other required fields
     ["ocorrencia", "date", "logradouro", "bairro", "cco", "matricula"].forEach(
       (id) => {
         const el = byId(id);
@@ -320,6 +335,7 @@
     return ymd ? ymd.split("-")[0] : "2026";
   }
 
+  // Updates side panel live information
   function wireBoxes() {
     const map = {
       coletivo: "box-coletivo",
@@ -366,6 +382,7 @@
     try {
       const getVal = (id) => (byId(id)?.value || "").toUpperCase().trim();
 
+      // Mandatory fields
       const inputs = {
         nOc: getVal("nOc"),
         ocorrencia: getVal("ocorrencia"),
@@ -385,6 +402,7 @@
         matricula: getVal("matricula"),
       };
 
+      // Optional fields defaulting to "NÃO HOUVE"
       const extras = [
         "victimName",
         "victimDocumentation",
@@ -424,6 +442,7 @@
       const dateFmt = formatPtBrDate(inputs.dateRaw);
       const year = getYearSuffix(inputs.dateRaw);
 
+      // Image sizing logic (Bounding Box)
       const imageOpts = {
         centered: false,
         getImage: (tagValue) =>
@@ -435,11 +454,13 @@
 
           let { w, h } = dims;
 
+          // Resize down if width exceeds limit
           if (w > MAX_DOC_WIDTH) {
             const ratio = MAX_DOC_WIDTH / w;
             w = MAX_DOC_WIDTH;
             h = h * ratio;
           }
+          // Resize down if height exceeds limit (checking aspect ratio integrity)
           if (h > MAX_DOC_HEIGHT) {
             const ratio = MAX_DOC_HEIGHT / h;
             h = MAX_DOC_HEIGHT;
@@ -492,6 +513,7 @@
       link.download = fileName;
       link.click();
 
+      // Update Excel preview
       setText("td-nOc", `${inputs.nOc}/${year}`);
       setText("td-date", dateFmt);
       setText("td-alerta", extraData.alerta);
@@ -522,7 +544,7 @@
   }
 
   /* ------------------------------------------------------------------------ */
-  /* Actions & Options                                                        */
+  /* Event Wiring & Actions                                                   */
   /* ------------------------------------------------------------------------ */
   function wireActions() {
     byId("clear")?.addEventListener("click", (e) => {
@@ -541,17 +563,16 @@
 
     const pasteArea = byId("paste-area");
     if (pasteArea) {
-      // 1. Clique Simples: Tenta colar do clipboard
+      // Click trigger
       pasteArea.addEventListener("click", handlePasteFromClipboard);
 
-      // 2. Drag & Drop (NOVA FUNÇÃO)
+      // Drag & Drop
       wireDragAndDrop(pasteArea);
 
-      // 3. Ctrl+V focado na área (Fallback)
+      // Global paste fallback
       pasteArea.addEventListener("paste", (e) => {
         e.preventDefault();
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        // Loop corrigido para pegar múltiplos itens, se houver
         for (let item of items) {
           if (item.kind === "file" && item.type.includes("image/")) {
             processImageFile(item.getAsFile());
