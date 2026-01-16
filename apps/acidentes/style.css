@@ -75,11 +75,6 @@ small {
   box-sizing: border-box;
 }
 
-#copy {
-  transform: scale(0.8);
-  margin-top: 20px;
-}
-
 #specifics button {
   margin-top: 10px;
 }
@@ -516,4 +511,38 @@ td {
   /* Herda seus estilos globais de h3, se precisar forçar: */
   font-size: 18px;
   border-bottom: none;
+}
+
+/* Container para alinhar botões lado a lado */
+.buttons-row {
+  display: flex;
+  gap: 20px; /* Espaço entre os botões */
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* Variante Verde do Botão (Excel Style) */
+.button-green .front {
+  background: #107c41; /* Verde Excel */
+}
+
+/* Ajuste da borda 3D para combinar com o verde */
+.button-green .edge {
+  background: linear-gradient(
+    to left,
+    #0b531f 0%,
+    #107c41 8%,
+    #107c41 92%,
+    #0b531f 100%
+  );
+}
+
+/* Ajuste da sombra */
+.button-green .shadow {
+  background: #0b531f;
+}
+
+/* Ajuste do Hover */
+.button-green:hover .front {
+  background: #0b531f; /* Escurece ao passar o mouse */
 }

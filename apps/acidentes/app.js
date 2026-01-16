@@ -557,6 +557,7 @@
         clearAll();
       }
     });
+
     byId("generateWord")?.addEventListener("click", handleGenerateWord);
 
     byId("copy")?.addEventListener("click", () => {
@@ -705,6 +706,50 @@
         const url = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${to}&cc=${cc}&su=${subject}&body=${body}`;
         window.open(url, "_blank");
       });
+    });
+
+    /* ========================================================================== */
+    /* Lógica da Planilha (Adicionar ao app.js)                                   */
+    /* ========================================================================== */
+
+    // CONFIGURAÇÃO DA PLANILHA (PREENCHA AQUI!)
+    const SHEET_CONFIG = {
+      // A parte longa da URL: docs.google.com/spreadsheets/d/---> ISSO_AQUI <---/edit
+      id: "1OcIUjqUdEszN1z0GqoqUoFJaDHdriiprTfgG61wApog",
+
+      // O ID da aba específica (gid=...). A primeira aba geralmente é "0".
+      gid: "666841944",
+    };
+
+    function openSpreadsheetRow() {
+      const nOcInput = document.getElementById("nOc");
+      const rawValue = nOcInput?.value || ""; // Ex: "6A0040"
+
+      // 1. Extrair apenas os números finais
+      // Remove "6A" e pega o resto.
+      const numberPart = rawValue.toUpperCase().replace("6A", "");
+      const ocNumber = parseInt(numberPart, 10); // Converte "0040" para 40
+
+      if (isNaN(ocNumber)) {
+        alert("Número da OC inválido para cálculo da linha.");
+        return;
+      }
+
+      // 2. Cálculo do Offset (Matemática)
+      // Se a OC 1 está na linha 3, o offset é +2.
+      const targetRow = ocNumber + 2;
+
+      // 3. Montagem do Link
+      // range=B{row} vai focar direto na célula da coluna B naquela linha
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.id}/edit#gid=${SHEET_CONFIG.gid}&range=B${targetRow}`;
+
+      window.open(url, "_blank");
+    }
+
+    // Ligar o botão (Coloque dentro de wireActions)
+    document.getElementById("openSheet")?.addEventListener("click", (e) => {
+      e.preventDefault(); // Evita recarregar se estiver dentro de form
+      openSpreadsheetRow();
     });
   }
 
