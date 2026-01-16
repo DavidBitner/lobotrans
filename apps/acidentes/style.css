@@ -488,3 +488,32 @@ td {
   color: #333;
   font-weight: bold;
 }
+
+/* Adicionar ao final do arquivo */
+
+.email-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Centraliza verticalmente o botão em relação ao texto */
+  gap: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.note-text {
+  flex: 1; /* Ocupa todo espaço disponível na esquerda */
+}
+
+/* Garante que o botão não encolha */
+.email-block .button {
+  flex-shrink: 0;
+}
+
+/* Mantém o estilo original do seu H3 dentro do modal */
+.note-text h3 {
+  margin-top: 0;
+  /* Herda seus estilos globais de h3, se precisar forçar: */
+  font-size: 18px;
+  border-bottom: none;
+}

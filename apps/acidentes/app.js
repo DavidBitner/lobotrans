@@ -549,7 +549,13 @@
   function wireActions() {
     byId("clear")?.addEventListener("click", (e) => {
       e.preventDefault();
-      clearAll();
+      if (
+        confirm(
+          "Tem certeza que deseja limpar todos os campos?\n\nEssa ação apagará todos os dados preenchidos e não pode ser desfeita."
+        )
+      ) {
+        clearAll();
+      }
     });
     byId("generateWord")?.addEventListener("click", handleGenerateWord);
 
@@ -630,6 +636,76 @@
           );
         }
       });
+
+    /* ========================================================================== */
+    /* Lógica de E-mail (Atualizada com Assunto Dinâmico)                         */
+    /* ========================================================================== */
+
+    // 1. Definição dos e-mails
+    const RAW_EMAILS = {
+      cc: "reinaldooperacional@wolffsp.com,robertooperacional@wolffsp.com,celsooperacional@wolffsp.com,yvanoperacional@wolffsp.com",
+      base: "mauricio.oliveira@wolffsp.com,sinistro@wolffsp.com,beatrizsinistro@wolffsp.com,gustavosinistro@wolffsp.com,maianesinistro@wolffsp.com",
+      funilaria: "funilariad10@wolffsp.com",
+      treinamento: "treinamento1@wolffsp.com",
+      estoque: "estoquepecasd10@wolffsp.com",
+    };
+
+    const SCENARIOS = {
+      "sem-danos": RAW_EMAILS.base,
+      "com-danos": `${RAW_EMAILS.base},${RAW_EMAILS.funilaria}`,
+      "delicado-sem-danos": `${RAW_EMAILS.base},${RAW_EMAILS.treinamento}`,
+      "delicado-com-danos": `${RAW_EMAILS.base},${RAW_EMAILS.treinamento},${RAW_EMAILS.funilaria}`,
+      furto: `${RAW_EMAILS.base},${RAW_EMAILS.treinamento},${RAW_EMAILS.funilaria},${RAW_EMAILS.estoque}`,
+    };
+
+    // 2. Função auxiliar para gerar o Assunto (Baseada na lógica do Word)
+    function getFormattedSubject() {
+      // Helper simples para pegar valor limpo
+      const getVal = (id) =>
+        (document.getElementById(id)?.value || "").toUpperCase().trim();
+
+      const nOc = getVal("nOc");
+      const linha = getVal("linha");
+      const coletivo = getVal("coletivo");
+      const ocorrencia = getVal("ocorrencia");
+      const logradouro = getVal("logradouro");
+      const dateRaw = document.getElementById("date")?.value || "";
+
+      // Formata a data igual ao nome do arquivo (DD.MM)
+      // formatPtBrDate já existe no seu escopo global do app.js
+      const dateFmt = formatPtBrDate(dateRaw);
+      const dateSubject = dateFmt
+        ? dateFmt.replace(/\//g, ".").slice(0, 5)
+        : "";
+
+      // Monta a string: "6A1234 - 25.02 - 6000-10 - 66999 - COLISAO - RUA TESTE"
+      // Se algum campo estiver vazio, vai ficar com espaços vazios (" - - "),
+      // o que é esperado se o usuário clicar antes de preencher.
+      return `${nOc} - ${dateSubject} - ${linha} - ${coletivo} - ${ocorrencia} - ${logradouro}`;
+    }
+
+    // 3. Listener dos botões
+    // (Certifique-se de colocar isso dentro da função wireActions ou init, onde $$ está disponível)
+    const emailButtons = document.querySelectorAll(".email-trigger");
+    emailButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const targetBtn = e.target.closest(".email-trigger");
+        const type = targetBtn.getAttribute("data-type");
+
+        const to = SCENARIOS[type];
+        const cc = RAW_EMAILS.cc;
+
+        // AQUI ESTÁ A MÁGICA:
+        const rawSubject = getFormattedSubject();
+        const subject = encodeURIComponent(rawSubject);
+
+        // Corpo vazio por enquanto
+        const body = "";
+
+        const url = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${to}&cc=${cc}&su=${subject}&body=${body}`;
+        window.open(url, "_blank");
+      });
+    });
   }
 
   function init() {
