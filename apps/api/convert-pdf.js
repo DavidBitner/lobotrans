@@ -1,8 +1,9 @@
-/* api/convert-pdf.js - VERSÃO COM LOGS SEGUROS */
+/* api/convert-pdf.js - Versão Compatível Node.js */
 const PDFServicesSdk = require("@adobe/pdf-services-node-sdk");
 
-export default async function handler(req, res) {
-  // Configuração CORS (Padrão)
+// Em Node.js puro, usamos module.exports em vez de export default
+module.exports = async (req, res) => {
+  // 1. Configuração de CORS (Permite que seu site converse com a API)
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -14,44 +15,40 @@ export default async function handler(req, res) {
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
   );
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
+  // Responde rápido se for apenas uma verificação do navegador (OPTIONS)
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
-    console.log("1. Iniciando API Handler...");
+    console.log("--> Iniciando processamento Adobe...");
 
-    // DIAGNÓSTICO DE VARIÁVEIS (SEGURO)
-    // Não imprime a chave, apenas diz se ela existe e o tamanho dela
+    // 2. Verificação de Segurança das Chaves
     const clientId = process.env.ADOBE_CLIENT_ID;
     const clientSecret = process.env.ADOBE_CLIENT_SECRET;
 
-    console.log(`2. Status das Chaves:`);
-    console.log(
-      `   - Client ID: ${clientId ? "OK (" + clientId.length + " chars)" : "MISSING"}`,
-    );
-    console.log(
-      `   - Secret: ${clientSecret ? "OK (" + clientSecret.length + " chars)" : "MISSING"}`,
-    );
-
     if (!clientId || !clientSecret) {
+      console.error("ERRO: Variáveis de ambiente não encontradas.");
       throw new Error(
-        "As variáveis de ambiente ADOBE_CLIENT_ID ou ADOBE_CLIENT_SECRET não foram carregadas.",
+        "Configuração do servidor incompleta (Faltam chaves Adobe).",
       );
     }
 
-    // 3. Recebe o arquivo
+    // 3. Recebe o arquivo do Front-end
+    // O Vercel já entrega o body como Buffer se o Content-Type estiver correto
     const inputBuffer = req.body;
-    console.log(
-      `3. Arquivo recebido. É Buffer? ${Buffer.isBuffer(inputBuffer)}. Tamanho: ${inputBuffer ? inputBuffer.length : 0} bytes`,
-    );
 
     if (!inputBuffer || inputBuffer.length === 0) {
-      throw new Error("O corpo da requisição (arquivo) chegou vazio.");
+      throw new Error("O arquivo Word chegou vazio na API.");
     }
 
-    // 4. Setup Adobe
-    console.log("4. Configurando Credenciais Adobe...");
+    console.log(`--> Arquivo recebido. Tamanho: ${inputBuffer.length} bytes`);
+
+    // 4. Autenticação Adobe
     const credentials =
       PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
         .withClientId(clientId)
@@ -62,41 +59,33 @@ export default async function handler(req, res) {
       PDFServicesSdk.ExecutionContext.create(credentials);
     const createPdfOperation = PDFServicesSdk.CreatePDF.Operation.createNew();
 
+    // 5. Prepara e Envia
     const input = PDFServicesSdk.FileRef.createFromStream(
       inputBuffer,
       PDFServicesSdk.CreatePDF.SupportedSourceFormat.docx,
     );
     createPdfOperation.setInput(input);
 
-    // 5. Execução
-    console.log(
-      "5. Enviando para os servidores da Adobe (Aguardando resposta)...",
-    );
+    console.log("--> Enviando para nuvem Adobe...");
     const result = await createPdfOperation.execute(executionContext);
-    console.log("6. Sucesso! Resposta recebida da Adobe.");
+    console.log("--> Sucesso! Gerando resposta.");
 
-    // 6. Processamento do Retorno
+    // 6. Devolve o PDF
     const chunks = [];
     for await (const chunk of result.saveAsStream()) {
       chunks.push(chunk);
     }
     const pdfBuffer = Buffer.concat(chunks);
-    console.log(
-      `7. PDF Final montado. Tamanho: ${pdfBuffer.length} bytes. Enviando para o navegador.`,
-    );
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=documento.pdf");
     return res.send(pdfBuffer);
   } catch (err) {
-    // ESTE É O LOG IMPORTANTE QUE VAI APARECER NO VERCEL
-    console.error("!!! ERRO CRÍTICO NO BACKEND !!!");
-    console.error(err);
-
-    // Devolve o erro detalhado para o seu navegador (aparecerá no console do Chrome)
+    console.error("!!! ERRO API:", err);
+    // Devolve o erro para o seu alerta no site ler
     return res.status(500).json({
       error: err.message,
-      stack: err.stack,
+      details: err.stack,
     });
   }
-}
+};
