@@ -1,64 +1,102 @@
-/* api/convert-pdf.js */
+/* api/convert-pdf.js - VERSÃO COM LOGS SEGUROS */
 const PDFServicesSdk = require("@adobe/pdf-services-node-sdk");
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
+  // Configuração CORS (Padrão)
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
+  );
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
-  }
 
   try {
-    // 1. Autenticação (Pega as chaves do ambiente seguro)
+    console.log("1. Iniciando API Handler...");
+
+    // DIAGNÓSTICO DE VARIÁVEIS (SEGURO)
+    // Não imprime a chave, apenas diz se ela existe e o tamanho dela
+    const clientId = process.env.ADOBE_CLIENT_ID;
+    const clientSecret = process.env.ADOBE_CLIENT_SECRET;
+
+    console.log(`2. Status das Chaves:`);
+    console.log(
+      `   - Client ID: ${clientId ? "OK (" + clientId.length + " chars)" : "MISSING"}`,
+    );
+    console.log(
+      `   - Secret: ${clientSecret ? "OK (" + clientSecret.length + " chars)" : "MISSING"}`,
+    );
+
+    if (!clientId || !clientSecret) {
+      throw new Error(
+        "As variáveis de ambiente ADOBE_CLIENT_ID ou ADOBE_CLIENT_SECRET não foram carregadas.",
+      );
+    }
+
+    // 3. Recebe o arquivo
+    const inputBuffer = req.body;
+    console.log(
+      `3. Arquivo recebido. É Buffer? ${Buffer.isBuffer(inputBuffer)}. Tamanho: ${inputBuffer ? inputBuffer.length : 0} bytes`,
+    );
+
+    if (!inputBuffer || inputBuffer.length === 0) {
+      throw new Error("O corpo da requisição (arquivo) chegou vazio.");
+    }
+
+    // 4. Setup Adobe
+    console.log("4. Configurando Credenciais Adobe...");
     const credentials =
       PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
-        .withClientId(process.env.ADOBE_CLIENT_ID)
-        .withClientSecret(process.env.ADOBE_CLIENT_SECRET)
+        .withClientId(clientId)
+        .withClientSecret(clientSecret)
         .build();
 
-    // 2. Setup da Execução
     const executionContext =
       PDFServicesSdk.ExecutionContext.create(credentials);
     const createPdfOperation = PDFServicesSdk.CreatePDF.Operation.createNew();
 
-    // 3. Recebe o arquivo Word (Blob) do Front-end
-    // O Vercel recebe o corpo como Buffer automaticamente se for binário
-    // Nota: Em algumas configs do Vercel nodejs, pode ser necessário tratar o body
-    const inputBuffer = req.body;
-
-    // Cria um input stream para a Adobe
     const input = PDFServicesSdk.FileRef.createFromStream(
       inputBuffer,
       PDFServicesSdk.CreatePDF.SupportedSourceFormat.docx,
     );
     createPdfOperation.setInput(input);
 
-    // 4. Executa a conversão
+    // 5. Execução
+    console.log(
+      "5. Enviando para os servidores da Adobe (Aguardando resposta)...",
+    );
     const result = await createPdfOperation.execute(executionContext);
+    console.log("6. Sucesso! Resposta recebida da Adobe.");
 
-    // 5. Lê o resultado e devolve para o site
-    // O SDK salva em arquivo temporário, precisamos ler de volta para buffer
-    const tempStream = new require("stream").PassThrough();
-    result.saveAsFile(tempStream); // Isso é um hack do SDK, idealmente streamar direto
-
-    // Como o saveAsFile do SDK da Adobe espera um caminho de arquivo,
-    // e em Serverless não temos sistema de arquivos persistente,
-    // a melhor abordagem com esse SDK específico é pegar o stream:
-
-    // Vamos simplificar: O SDK retorna um FileRef.
-    // Infelizmente o SDK da Adobe é focado em FileSystem.
-    // Para Serverless, precisamos coletar o stream num buffer manualmente.
-
+    // 6. Processamento do Retorno
     const chunks = [];
     for await (const chunk of result.saveAsStream()) {
       chunks.push(chunk);
     }
     const pdfBuffer = Buffer.concat(chunks);
+    console.log(
+      `7. PDF Final montado. Tamanho: ${pdfBuffer.length} bytes. Enviando para o navegador.`,
+    );
 
-    // 6. Resposta
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=documento.pdf");
     return res.send(pdfBuffer);
   } catch (err) {
-    console.error("Erro Adobe:", err);
-    return res.status(500).json({ error: err.message });
+    // ESTE É O LOG IMPORTANTE QUE VAI APARECER NO VERCEL
+    console.error("!!! ERRO CRÍTICO NO BACKEND !!!");
+    console.error(err);
+
+    // Devolve o erro detalhado para o seu navegador (aparecerá no console do Chrome)
+    return res.status(500).json({
+      error: err.message,
+      stack: err.stack,
+    });
   }
 }
