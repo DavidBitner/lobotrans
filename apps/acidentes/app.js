@@ -699,6 +699,7 @@
   }
 
   // Função que chama a API do Vercel (Adobe)
+  // Função que chama a API do Vercel (Adobe)
   async function generateAndDownloadPDF() {
     const msg = byId("pdf-loading-msg");
     if (msg) msg.style.display = "block";
@@ -714,12 +715,27 @@
         body: currentDocBlob,
       });
 
-      if (!response.ok) throw new Error("Falha na conversão PDF via API");
+      // --- CORREÇÃO AQUI: Ler o erro real do servidor ---
+      if (!response.ok) {
+        let errorDetails = "Erro desconhecido";
+        try {
+          // Tenta ler o JSON que nosso backend enviou
+          const errJson = await response.json();
+          // Pega a mensagem de erro ou os detalhes técnicos
+          errorDetails = errJson.error || JSON.stringify(errJson);
+        } catch (readErr) {
+          // Se não for JSON (ex: erro 404 HTML ou 504 Gateway Timeout)
+          errorDetails = `Status ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorDetails);
+      }
+      // --------------------------------------------------
 
       const pdfBlob = await response.blob();
       downloadBlob(pdfBlob, currentFileName + ".pdf");
     } catch (e) {
-      ui.alert("Erro Adobe PDF", "Erro ao converter: " + e.message);
+      // O alerta agora mostrará a mensagem técnica exata (ex: "Module not found")
+      ui.alert("Erro Adobe PDF", "Detalhes do erro:\n" + e.message);
     } finally {
       if (msg) msg.style.display = "none";
       byId("modal-format").classList.remove("show"); // Fecha modal
