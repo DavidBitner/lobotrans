@@ -1,5 +1,5 @@
 /* ========================================================================== */
-/* Accident Report App - Final Version with Adobe PDF & Cloud API             */
+/* Accident Report App - Final Version with Adobe PDF & Custom UI             */
 /* ========================================================================== */
 
 (() => {
@@ -17,7 +17,7 @@
   let attachedImages = [];
   let imageDimensionsCache = {};
 
-  // NOVO: Variáveis para segurar o documento enquanto o usuário escolhe o formato
+  // Variáveis para segurar o documento enquanto o usuário escolhe o formato
   let currentDocBlob = null;
   let currentFileName = "";
 
@@ -32,6 +32,70 @@
   const setText = (id, text) => {
     const el = byId(id);
     if (el) el.textContent = text;
+  };
+
+  /* ------------------------------------------------------------------------ */
+  /* Custom UI Alerts (Substitui alert/confirm nativos)                       */
+  /* ------------------------------------------------------------------------ */
+  const ui = {
+    // Exibe um alerta simples (Botão OK)
+    alert: (title, message) => {
+      const titleEl = byId("sys-title");
+      const msgEl = byId("sys-msg");
+      const actions = byId("sys-actions");
+      const modal = byId("modal-system");
+
+      if (titleEl) titleEl.innerText = title;
+      if (msgEl) msgEl.innerHTML = message.replace(/\n/g, "<br>");
+
+      if (actions) {
+        actions.innerHTML = ""; // Limpa botões antigos
+        const btn = document.createElement("button");
+        btn.className = "button";
+        btn.innerHTML = `<span class="shadow"></span><span class="edge"></span><div class="front"><span>OK</span></div>`;
+        btn.onclick = () => modal.classList.remove("show");
+        actions.appendChild(btn);
+      }
+
+      if (modal) modal.classList.add("show");
+    },
+
+    // Exibe confirmação (Botões Cancelar / Confirmar)
+    confirm: (title, message, onConfirm) => {
+      const titleEl = byId("sys-title");
+      const msgEl = byId("sys-msg");
+      const actions = byId("sys-actions");
+      const modal = byId("modal-system");
+
+      if (titleEl) titleEl.innerText = title;
+      if (msgEl) msgEl.innerHTML = message.replace(/\n/g, "<br>");
+
+      if (actions) {
+        actions.innerHTML = "";
+
+        // Botão Cancelar (Cinza)
+        const btnCancel = document.createElement("button");
+        btnCancel.className = "button";
+        btnCancel.style.flex = "1";
+        btnCancel.innerHTML = `<span class="shadow"></span><span class="edge"></span><div class="front" style="background:#777"><span>NÃO</span></div>`;
+        btnCancel.onclick = () => modal.classList.remove("show");
+
+        // Botão Confirmar (Amarelo)
+        const btnConfirm = document.createElement("button");
+        btnConfirm.className = "button";
+        btnConfirm.style.flex = "1";
+        btnConfirm.innerHTML = `<span class="shadow"></span><span class="edge"></span><div class="front"><span>SIM</span></div>`;
+        btnConfirm.onclick = () => {
+          modal.classList.remove("show");
+          if (onConfirm) onConfirm();
+        };
+
+        actions.appendChild(btnCancel);
+        actions.appendChild(btnConfirm);
+      }
+
+      if (modal) modal.classList.add("show");
+    },
   };
 
   /* ------------------------------------------------------------------------ */
@@ -146,7 +210,6 @@
     const originalText = textP.innerHTML;
 
     try {
-      // Set loading state due to potential system I/O latency
       container.classList.add("loading");
       textP.innerHTML = "Lendo área de transferência...";
 
@@ -165,7 +228,10 @@
       }
 
       if (!found) {
-        alert("Nenhuma imagem encontrada na área de transferência.");
+        ui.alert(
+          "Aviso",
+          "Nenhuma imagem encontrada na área de transferência.",
+        );
       }
     } catch (err) {
       console.error("Clipboard access error:", err);
@@ -176,7 +242,6 @@
   }
 
   function wireDragAndDrop(area) {
-    // Prevent default browser behavior
     ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
       area.addEventListener(eventName, preventDefaults, false);
     });
@@ -186,7 +251,6 @@
       e.stopPropagation();
     }
 
-    // Visual feedback handlers
     ["dragenter", "dragover"].forEach((eventName) => {
       area.addEventListener(
         eventName,
@@ -203,7 +267,6 @@
       );
     });
 
-    // Handle Drop
     area.addEventListener(
       "drop",
       (e) => {
@@ -315,7 +378,7 @@
           validators[type](el);
         });
     });
-    // Generic validation for other required fields
+
     ["ocorrencia", "date", "logradouro", "bairro", "cco", "matricula"].forEach(
       (id) => {
         const el = byId(id);
@@ -338,7 +401,6 @@
     return ymd ? ymd.split("-")[0] : "2026";
   }
 
-  // Updates side panel live information
   function wireBoxes() {
     const map = {
       coletivo: "box-coletivo",
@@ -379,7 +441,7 @@
   }
 
   /* ------------------------------------------------------------------------ */
-  /* Generate Word & PDF Logic (NEW - Replaces old handleGenerateWord)        */
+  /* Generate Word & PDF Logic                                                */
   /* ------------------------------------------------------------------------ */
 
   async function prepareDocument() {
@@ -440,30 +502,88 @@
       const extraData = {};
       extras.forEach((f) => (extraData[f] = getVal(f) || "NÃO HOUVE"));
 
-      // ---------------- VALIDAÇÃO COMPLETA ----------------
-      if (!inputs.nOc) return alert("Erro: Preencha o Nº OC.");
-      if (!inputs.ocorrencia) return alert("Erro: Preencha a Ocorrência.");
-      if (!inputs.coletivo) return alert("Erro: Preencha o Coletivo.");
-      if (!inputs.linha) return alert("Erro: Preencha a Linha.");
-      if (!inputs.dateRaw) return alert("Erro: Preencha a Data.");
-      if (!inputs.time) return alert("Erro: Preencha a Hora.");
+      // ---------------- VALIDAÇÃO ATUALIZADA ----------------
+      const check = (val, msg) => {
+        if (!val) {
+          ui.alert("Campo Obrigatório", msg);
+          return false;
+        }
+        return true;
+      };
 
-      if (!inputs.logradouro) return alert("Erro: Preencha o Logradouro.");
-      if (!inputs.numero) return alert("Erro: Preencha o Número (ou S/N).");
-      if (!inputs.bairro) return alert("Erro: Preencha o Bairro.");
+      if (
+        !check(
+          inputs.nOc,
+          "Por favor, preencha o <strong>Número da OC</strong>.",
+        )
+      )
+        return;
+      if (
+        !check(
+          inputs.ocorrencia,
+          "Preencha a descrição da <strong>Ocorrência</strong>.",
+        )
+      )
+        return;
+      if (
+        !check(
+          inputs.coletivo,
+          "Preencha o número do <strong>Coletivo</strong>.",
+        )
+      )
+        return;
+      if (!check(inputs.linha, "Preencha a <strong>Linha</strong>.")) return;
+      if (!check(inputs.dateRaw, "Selecione uma <strong>Data</strong>."))
+        return;
+      if (!check(inputs.time, "Preencha a <strong>Hora</strong>.")) return;
 
-      if (!inputs.driverName)
-        return alert("Erro: Preencha o Nome do Motorista.");
-      if (!inputs.driverCpf) return alert("Erro: Preencha o CPF do Motorista.");
-      if (!inputs.driverSituation)
-        return alert("Erro: Preencha a Situação do Motorista.");
+      if (
+        !check(
+          inputs.logradouro,
+          "Preencha o <strong>Logradouro</strong> (Endereço).",
+        )
+      )
+        return;
+      if (!check(inputs.numero, "Preencha o <strong>Número</strong> (ou S/N)."))
+        return;
+      if (!check(inputs.bairro, "Preencha o <strong>Bairro</strong>.")) return;
 
-      if (!inputs.inicioFato)
-        return alert("Erro: Preencha a Descrição do Início do Fato.");
-      if (!inputs.desfecho) return alert("Erro: Preencha o Desfecho.");
+      if (
+        !check(
+          inputs.driverName,
+          "Preencha o <strong>Nome do Motorista</strong>.",
+        )
+      )
+        return;
+      if (
+        !check(
+          inputs.driverCpf,
+          "Preencha o <strong>CPF do Motorista</strong>.",
+        )
+      )
+        return;
+      if (
+        !check(
+          inputs.driverSituation,
+          "Preencha a <strong>Situação do Motorista</strong>.",
+        )
+      )
+        return;
 
-      if (!inputs.cco) return alert("Erro: Preencha o CCO (Responsável).");
-      if (!inputs.matricula) return alert("Erro: Preencha a Matrícula.");
+      if (
+        !check(
+          inputs.inicioFato,
+          "Preencha a descrição do <strong>Início do Fato</strong>.",
+        )
+      )
+        return;
+      if (!check(inputs.desfecho, "Preencha o <strong>Desfecho</strong>."))
+        return;
+
+      if (!check(inputs.cco, "Preencha o <strong>CCO</strong> responsável."))
+        return;
+      if (!check(inputs.matricula, "Preencha a <strong>Matrícula</strong>."))
+        return;
       // -----------------------------------------------------
 
       const dateFmt = formatPtBrDate(inputs.dateRaw);
@@ -559,14 +679,13 @@
 
       byId("excel")?.classList.remove("hidden");
 
-      // ABRE O MODAL DE ESCOLHA EM VEZ DE BAIXAR
+      // ABRE O MODAL DE ESCOLHA
       byId("modal-format").classList.add("show");
     } catch (err) {
       console.error(err);
-      alert(
-        "Erro ao gerar: " +
-          (err.properties?.errors?.map((e) => e.message).join("\n") ||
-            err.message),
+      ui.alert(
+        "Erro na Geração",
+        err.properties?.errors?.map((e) => e.message).join("\n") || err.message,
       );
     }
   }
@@ -600,7 +719,7 @@
       const pdfBlob = await response.blob();
       downloadBlob(pdfBlob, currentFileName + ".pdf");
     } catch (e) {
-      alert("Erro ao converter PDF: " + e.message);
+      ui.alert("Erro Adobe PDF", "Erro ao converter: " + e.message);
     } finally {
       if (msg) msg.style.display = "none";
       byId("modal-format").classList.remove("show"); // Fecha modal
@@ -611,21 +730,22 @@
   /* Event Wiring & Actions                                                   */
   /* ------------------------------------------------------------------------ */
   function wireActions() {
+    // Botão Limpar com UI Confirm
     byId("clear")?.addEventListener("click", (e) => {
       e.preventDefault();
-      if (
-        confirm(
-          "Tem certeza que deseja limpar todos os campos?\n\nEssa ação apagará todos os dados preenchidos e não pode ser desfeita.",
-        )
-      ) {
-        clearAll();
-      }
+      ui.confirm(
+        "Limpar Formulário",
+        "Tem certeza que deseja apagar todos os campos?\nEssa ação não pode ser desfeita.",
+        () => {
+          clearAll();
+        },
+      );
     });
 
-    // SUBSTITUÍDO: Agora chama prepareDocument
+    // Gera Word (Abre modal de escolha)
     byId("generateWord")?.addEventListener("click", prepareDocument);
 
-    // LISTENERS DO NOVO MODAL (WORD / PDF)
+    // Modal Formato - Apenas Word
     byId("btn-word-only")?.addEventListener("click", () => {
       if (currentDocBlob) {
         downloadBlob(currentDocBlob, currentFileName + ".docx");
@@ -633,6 +753,7 @@
       byId("modal-format").classList.remove("show");
     });
 
+    // Modal Formato - Word + PDF
     byId("btn-word-pdf")?.addEventListener("click", () => {
       if (currentDocBlob) {
         // Baixa o Word primeiro (garantia)
@@ -649,24 +770,21 @@
       }
     });
 
-    // Copy Button Logic
+    // Botão Copiar Linha
     byId("copy")?.addEventListener("click", () => {
       const row = $("#excel tbody tr");
       if (row)
         navigator.clipboard
           .writeText(row.innerText)
-          .then(() => alert("Copiado!"));
+          .then(() =>
+            ui.alert("Sucesso", "Linha copiada para a área de transferência!"),
+          );
     });
 
     const pasteArea = byId("paste-area");
     if (pasteArea) {
-      // Click trigger
       pasteArea.addEventListener("click", handlePasteFromClipboard);
-
-      // Drag & Drop
       wireDragAndDrop(pasteArea);
-
-      // Global paste fallback
       pasteArea.addEventListener("paste", (e) => {
         e.preventDefault();
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -682,7 +800,7 @@
       byId("modal").classList.add("show"),
     );
 
-    // Lógica do Painel Lateral (Opções)
+    // Lógica do Painel Lateral (Opções de Preenchimento Rápido)
     const optBtn = byId("opt-apply-a");
     if (optBtn)
       optBtn.addEventListener("click", () => {
@@ -729,7 +847,6 @@
     /* Lógica de E-mail                                                           */
     /* ========================================================================== */
 
-    // 1. Definição dos e-mails
     const RAW_EMAILS = {
       cc: "reinaldooperacional@wolffsp.com,robertooperacional@wolffsp.com,celsooperacional@wolffsp.com,yvanoperacional@wolffsp.com",
       base: "mauricio.oliveira@wolffsp.com,sinistro@wolffsp.com,beatrizsinistro@wolffsp.com,gustavosinistro@wolffsp.com,maianesinistro@wolffsp.com",
@@ -746,7 +863,7 @@
       furto: `${RAW_EMAILS.base},${RAW_EMAILS.treinamento},${RAW_EMAILS.funilaria},${RAW_EMAILS.estoque}`,
     };
 
-    // 2. Função auxiliar para gerar o Assunto
+    // Função auxiliar para gerar o Assunto
     function getFormattedSubject() {
       const getVal = (id) =>
         (document.getElementById(id)?.value || "").toUpperCase().trim();
@@ -766,7 +883,7 @@
       return `${nOc} - ${dateSubject} - ${linha} - ${coletivo} - ${ocorrencia} - ${logradouro}`;
     }
 
-    // 3. Listener dos botões
+    // Listeners dos botões de e-mail
     const emailButtons = document.querySelectorAll(".email-trigger");
     emailButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -801,7 +918,7 @@
       const ocNumber = parseInt(numberPart, 10);
 
       if (isNaN(ocNumber)) {
-        alert("Número da OC inválido para cálculo da linha.");
+        ui.alert("Erro", "Número da OC inválido para cálculo da linha.");
         return;
       }
 

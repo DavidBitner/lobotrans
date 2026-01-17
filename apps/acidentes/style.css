@@ -644,3 +644,39 @@ td {
 #btn-word-pdf:hover .front {
   background: #a00000;
 }
+
+/* Ajuste Específico para o Modal de Formato (Word/PDF) */
+#modal-format .modal-content {
+  height: auto; /* Altura se adapta ao conteúdo */
+  max-height: 90vh; /* Não deixa passar da altura da tela */
+  width: 100%;
+  max-width: 400px; /* Mantém estreito e elegante */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px; /* Mais respiro interno */
+}
+
+/* Ajuste nos títulos dentro desse modal específico */
+#modal-format h3 {
+  margin-bottom: 15px;
+  font-size: 22px;
+}
+
+/* Estilo para o Modal de Sistema (Alertas/Confirmações) */
+#modal-system .modal-content {
+  height: auto;
+  max-height: 90vh;
+  width: 100%;
+  max-width: 400px; /* Mantém compacto */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+}
+
+#modal-system h3 {
+  border-bottom: none; /* Remove linha amarela padrão */
+  font-size: 22px;
+}
