@@ -1,8 +1,8 @@
-/* api/convert-pdf.js - Versão Robust Stream Reader */
+/* api/convert-pdf.js - Fix: Buffer to Stream Wrapper */
 const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
+const { Readable } = require("stream"); // Módulo nativo para criar Streams
 
-// Função auxiliar para ler o corpo da requisição manualmente (Byte a Byte)
-// Isso resolve o problema do "arquivo vazio" no Vercel
+// Helper para ler o corpo da requisição
 async function getRawBody(readable) {
   const chunks = [];
   for await (const chunk of readable) {
@@ -29,40 +29,35 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    console.log("--> [API] Iniciando recebimento...");
+    console.log("--> [API] Iniciando...");
 
-    // 2. Leitura do Arquivo (Estratégia Híbrida)
-    // Tenta pegar o body padrão do Vercel. Se estiver vazio, lê o stream manualmente.
+    // 2. Leitura do Input
     let inputBuffer = req.body;
-
     if (
       !inputBuffer ||
       (Buffer.isBuffer(inputBuffer) && inputBuffer.length === 0) ||
       (typeof inputBuffer === "object" && Object.keys(inputBuffer).length === 0)
     ) {
-      console.log("--> [API] Body padrão vazio. Lendo stream manual...");
       inputBuffer = await getRawBody(req);
     }
 
-    console.log(
-      `--> [API] Tamanho final recebido: ${inputBuffer ? inputBuffer.length : 0} bytes`,
-    );
-
     if (!inputBuffer || inputBuffer.length === 0) {
-      throw new Error(
-        "O arquivo chegou com 0 bytes no servidor. Verifique o envio.",
-      );
+      throw new Error("Arquivo vazio recebido.");
     }
 
-    // 3. Verifica Credenciais
+    // 3. FIX CRÍTICO: Converter Buffer para Readable Stream
+    // O SDK 3.4.0 exige isso para usar createFromStream
+    const inputStream = new Readable();
+    inputStream.push(inputBuffer);
+    inputStream.push(null); // Sinaliza o fim do arquivo
+
+    // 4. Credenciais
     const clientId = process.env.ADOBE_CLIENT_ID;
     const clientSecret = process.env.ADOBE_CLIENT_SECRET;
 
-    if (!clientId || !clientSecret) {
-      throw new Error("Credenciais Adobe não configuradas no Vercel.");
-    }
+    if (!clientId || !clientSecret)
+      throw new Error("Faltam chaves de API no Vercel.");
 
-    // 4. Processamento Adobe
     const credentials =
       PDFServicesSdk.Credentials.servicePrincipalCredentialsBuilder()
         .withClientId(clientId)
@@ -73,17 +68,17 @@ module.exports = async (req, res) => {
       PDFServicesSdk.ExecutionContext.create(credentials);
     const createPdfOperation = PDFServicesSdk.CreatePDF.Operation.createNew();
 
+    // 5. Envia o Stream (agora compatível)
     const input = PDFServicesSdk.FileRef.createFromStream(
-      inputBuffer,
+      inputStream,
       PDFServicesSdk.CreatePDF.SupportedSourceFormat.docx,
     );
     createPdfOperation.setInput(input);
 
     console.log("--> [API] Enviando para Adobe...");
     const result = await createPdfOperation.execute(executionContext);
-    console.log("--> [API] Sucesso! Baixando PDF...");
 
-    // 5. Retorno
+    // 6. Retorno
     const chunks = [];
     for await (const chunk of result.saveAsStream()) {
       chunks.push(chunk);
