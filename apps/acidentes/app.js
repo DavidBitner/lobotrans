@@ -699,7 +699,6 @@
   }
 
   // Função que chama a API do Vercel (Adobe)
-  // Função que chama a API do Vercel (Adobe)
   async function generateAndDownloadPDF() {
     const msg = byId("pdf-loading-msg");
     if (msg) msg.style.display = "block";
@@ -709,8 +708,7 @@
       const response = await fetch("/api/convert-pdf", {
         method: "POST",
         headers: {
-          "Content-Type":
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "Content-Type": "application/octet-stream",
         },
         body: currentDocBlob,
       });
