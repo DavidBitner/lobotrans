@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -563,7 +563,11 @@
             </div>
           </button>
 
-          <button class="button button-green" id="openSheet">
+          <button
+            class="button button-green"
+            id="openSheet"
+            data-tooltip="Abre a planilha direto na linha desta Ocorrência"
+          >
             <span class="shadow"></span>
             <span class="edge"></span>
             <div class="front">
@@ -736,6 +740,46 @@
             </div>
           </button>
         </div>
+      </div>
+    </div>
+
+    <div id="modal-format" class="modal">
+      <div class="modal-content" style="max-width: 400px; text-align: center">
+        <h3 style="margin-top: 0; border: none">Gerar Relatório</h3>
+        <p style="margin-bottom: 30px; color: #666">
+          Como deseja salvar este documento?
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 15px">
+          <button class="button" id="btn-word-only" style="width: 100%">
+            <span class="shadow"></span>
+            <span class="edge"></span>
+            <div class="front">
+              <span>APENAS WORD (.DOCX)</span>
+            </div>
+          </button>
+
+          <button class="button" id="btn-word-pdf" style="width: 100%">
+            <span class="shadow"></span>
+            <span class="edge"></span>
+            <div class="front" style="background: #e31c2d">
+              <span>WORD + PDF (Adobe)</span>
+            </div>
+          </button>
+        </div>
+
+        <p
+          id="pdf-loading-msg"
+          style="
+            display: none;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #e31c2d;
+            font-weight: bold;
+          "
+        >
+          Gerando PDF na nuvem... aguarde...
+        </p>
       </div>
     </div>
 

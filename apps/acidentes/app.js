@@ -1,5 +1,5 @@
 /* ========================================================================== */
-/* Accident Report App - Final Version with Drag & Drop and Multi-Paste       */
+/* Accident Report App - Final Version with Adobe PDF & Cloud API             */
 /* ========================================================================== */
 
 (() => {
@@ -16,6 +16,10 @@
 
   let attachedImages = [];
   let imageDimensionsCache = {};
+
+  // NOVO: Variáveis para segurar o documento enquanto o usuário escolhe o formato
+  let currentDocBlob = null;
+  let currentFileName = "";
 
   /* ------------------------------------------------------------------------ */
   /* DOM Utilities                                                            */
@@ -151,7 +155,7 @@
       let found = false;
       for (const item of clipboardItems) {
         const imageTypes = item.types.filter((type) =>
-          type.startsWith("image/")
+          type.startsWith("image/"),
         );
         for (const type of imageTypes) {
           const blob = await item.getType(type);
@@ -172,7 +176,7 @@
   }
 
   function wireDragAndDrop(area) {
-    // Prevent default browser behavior (e.g., opening file in tab)
+    // Prevent default browser behavior
     ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
       area.addEventListener(eventName, preventDefaults, false);
     });
@@ -187,7 +191,7 @@
       area.addEventListener(
         eventName,
         () => area.classList.add("dragging"),
-        false
+        false,
       );
     });
 
@@ -195,7 +199,7 @@
       area.addEventListener(
         eventName,
         () => area.classList.remove("dragging"),
-        false
+        false,
       );
     });
 
@@ -215,14 +219,13 @@
           }
         }
       },
-      false
+      false,
     );
   }
 
   /* ------------------------------------------------------------------------ */
   /* Polyfills                                                                */
   /* ------------------------------------------------------------------------ */
-  // Fix for legacy ImageModule in modern browsers
   if (
     typeof SVGElement !== "undefined" &&
     !SVGElement.prototype.hasOwnProperty("namespaceURI")
@@ -251,7 +254,7 @@
         el.id,
         el.type === "checkbox" || el.type === "radio"
           ? String(el.checked)
-          : el.value.trim()
+          : el.value.trim(),
       );
   }
 
@@ -268,19 +271,19 @@
       setValidity(
         el,
         /^6A\d{4}$/.test(el.value.toUpperCase()),
-        byId("nOcError")
+        byId("nOcError"),
       ),
     coletivo: (el) =>
       setValidity(
         el,
         /^\d{5}( X \d{5})?$/.test(el.value.toUpperCase()),
-        byId("coletivoError")
+        byId("coletivoError"),
       ),
     linha: (el) =>
       setValidity(
         el,
         /^[A-Za-z0-9]{4}-[A-Za-z0-9]{2}$/.test(el.value),
-        byId("linhaError")
+        byId("linhaError"),
       ),
     time: (el) =>
       setValidity(el, /^\d{2}:\d{2}$/.test(el.value), byId("timeError")),
@@ -321,7 +324,7 @@
             el.value = el.value.toUpperCase();
             validators.generic(el, id + "Error");
           });
-      }
+      },
     );
   }
 
@@ -348,11 +351,11 @@
         if (byId(inp) && byId(out))
           byId(out).innerHTML = `<span class="label">${byId(out).id.replace(
             "box-",
-            ""
+            "",
           )}:</span> ${byId(inp).value}`;
       });
     Object.keys(map).forEach((id) =>
-      byId(id)?.addEventListener("input", update)
+      byId(id)?.addEventListener("input", update),
     );
     update();
   }
@@ -376,9 +379,10 @@
   }
 
   /* ------------------------------------------------------------------------ */
-  /* Generate Word Logic                                                      */
+  /* Generate Word & PDF Logic (NEW - Replaces old handleGenerateWord)        */
   /* ------------------------------------------------------------------------ */
-  async function handleGenerateWord() {
+
+  async function prepareDocument() {
     try {
       const getVal = (id) => (byId(id)?.value || "").toUpperCase().trim();
 
@@ -436,8 +440,31 @@
       const extraData = {};
       extras.forEach((f) => (extraData[f] = getVal(f) || "NÃO HOUVE"));
 
+      // ---------------- VALIDAÇÃO COMPLETA ----------------
       if (!inputs.nOc) return alert("Erro: Preencha o Nº OC.");
       if (!inputs.ocorrencia) return alert("Erro: Preencha a Ocorrência.");
+      if (!inputs.coletivo) return alert("Erro: Preencha o Coletivo.");
+      if (!inputs.linha) return alert("Erro: Preencha a Linha.");
+      if (!inputs.dateRaw) return alert("Erro: Preencha a Data.");
+      if (!inputs.time) return alert("Erro: Preencha a Hora.");
+
+      if (!inputs.logradouro) return alert("Erro: Preencha o Logradouro.");
+      if (!inputs.numero) return alert("Erro: Preencha o Número (ou S/N).");
+      if (!inputs.bairro) return alert("Erro: Preencha o Bairro.");
+
+      if (!inputs.driverName)
+        return alert("Erro: Preencha o Nome do Motorista.");
+      if (!inputs.driverCpf) return alert("Erro: Preencha o CPF do Motorista.");
+      if (!inputs.driverSituation)
+        return alert("Erro: Preencha a Situação do Motorista.");
+
+      if (!inputs.inicioFato)
+        return alert("Erro: Preencha a Descrição do Início do Fato.");
+      if (!inputs.desfecho) return alert("Erro: Preencha o Desfecho.");
+
+      if (!inputs.cco) return alert("Erro: Preencha o CCO (Responsável).");
+      if (!inputs.matricula) return alert("Erro: Preencha a Matrícula.");
+      // -----------------------------------------------------
 
       const dateFmt = formatPtBrDate(inputs.dateRaw);
       const year = getYearSuffix(inputs.dateRaw);
@@ -486,6 +513,7 @@
           ? attachedImages.map((img) => ({ imagem: img.src }))
           : [];
 
+      // Render Data
       doc.setData({
         ...inputs,
         ...extraData,
@@ -496,22 +524,19 @@
 
       doc.render();
 
-      const blob = doc.getZip().generate({
+      // Gera o Blob na Memória (Global)
+      currentDocBlob = doc.getZip().generate({
         type: "blob",
         mimeType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
 
-      const fileName = `${inputs.nOc} - ${dateFmt
+      // Define o Nome do Arquivo (Global)
+      currentFileName = `${inputs.nOc} - ${dateFmt
         .replace(/\//g, ".")
         .slice(0, 5)} - ${inputs.linha} - ${inputs.coletivo} - ${
         inputs.ocorrencia
-      } - ${inputs.logradouro}.docx`;
-
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      link.click();
+      } - ${inputs.logradouro}`;
 
       // Update Excel preview
       setText("td-nOc", `${inputs.nOc}/${year}`);
@@ -533,13 +558,52 @@
       setText("td-fechamento", inputs.cco);
 
       byId("excel")?.classList.remove("hidden");
+
+      // ABRE O MODAL DE ESCOLHA EM VEZ DE BAIXAR
+      byId("modal-format").classList.add("show");
     } catch (err) {
       console.error(err);
       alert(
         "Erro ao gerar: " +
           (err.properties?.errors?.map((e) => e.message).join("\n") ||
-            err.message)
+            err.message),
       );
+    }
+  }
+
+  // Helper para download local
+  function downloadBlob(blob, name) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = name;
+    link.click();
+  }
+
+  // Função que chama a API do Vercel (Adobe)
+  async function generateAndDownloadPDF() {
+    const msg = byId("pdf-loading-msg");
+    if (msg) msg.style.display = "block";
+
+    try {
+      // Envia o blob do Word para nossa API
+      const response = await fetch("/api/convert-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        },
+        body: currentDocBlob,
+      });
+
+      if (!response.ok) throw new Error("Falha na conversão PDF via API");
+
+      const pdfBlob = await response.blob();
+      downloadBlob(pdfBlob, currentFileName + ".pdf");
+    } catch (e) {
+      alert("Erro ao converter PDF: " + e.message);
+    } finally {
+      if (msg) msg.style.display = "none";
+      byId("modal-format").classList.remove("show"); // Fecha modal
     }
   }
 
@@ -551,15 +615,41 @@
       e.preventDefault();
       if (
         confirm(
-          "Tem certeza que deseja limpar todos os campos?\n\nEssa ação apagará todos os dados preenchidos e não pode ser desfeita."
+          "Tem certeza que deseja limpar todos os campos?\n\nEssa ação apagará todos os dados preenchidos e não pode ser desfeita.",
         )
       ) {
         clearAll();
       }
     });
 
-    byId("generateWord")?.addEventListener("click", handleGenerateWord);
+    // SUBSTITUÍDO: Agora chama prepareDocument
+    byId("generateWord")?.addEventListener("click", prepareDocument);
 
+    // LISTENERS DO NOVO MODAL (WORD / PDF)
+    byId("btn-word-only")?.addEventListener("click", () => {
+      if (currentDocBlob) {
+        downloadBlob(currentDocBlob, currentFileName + ".docx");
+      }
+      byId("modal-format").classList.remove("show");
+    });
+
+    byId("btn-word-pdf")?.addEventListener("click", () => {
+      if (currentDocBlob) {
+        // Baixa o Word primeiro (garantia)
+        downloadBlob(currentDocBlob, currentFileName + ".docx");
+        // Depois tenta o PDF
+        generateAndDownloadPDF();
+      }
+    });
+
+    // Fechamento genérico de modais ao clicar fora
+    window.addEventListener("click", (e) => {
+      if (e.target.classList.contains("modal")) {
+        e.target.classList.remove("show");
+      }
+    });
+
+    // Copy Button Logic
     byId("copy")?.addEventListener("click", () => {
       const row = $("#excel tbody tr");
       if (row)
@@ -589,13 +679,10 @@
     }
 
     byId("notes")?.addEventListener("click", () =>
-      byId("modal").classList.add("show")
+      byId("modal").classList.add("show"),
     );
-    byId("modal")?.addEventListener("click", (e) => {
-      if (!$(".modal-content").contains(e.target))
-        byId("modal").classList.remove("show");
-    });
 
+    // Lógica do Painel Lateral (Opções)
     const optBtn = byId("opt-apply-a");
     if (optBtn)
       optBtn.addEventListener("click", () => {
@@ -624,22 +711,22 @@
           setV("driverSituation", "-");
           setV(
             "inicioFato",
-            `INSPETOR OPERACIONAL __________ INFORMA, TRATA-SE DE UMA AVARIA ENCONTRADA NO COLETIVO ______, DENTRO DA GARAGEM UNIÃO, COLETIVO FOI ENCONTRADO PELO OPERACIONAL ÀS _________, NO ____________ COM A ______________ DANIFICADA.`
+            `INSPETOR OPERACIONAL __________ INFORMA, TRATA-SE DE UMA AVARIA ENCONTRADA NO COLETIVO ______, DENTRO DA GARAGEM UNIÃO, COLETIVO FOI ENCONTRADO PELO OPERACIONAL ÀS _________, NO ____________ COM A ______________ DANIFICADA.`,
           );
           setV(
             "desfecho",
-            "OPERACIONAL ___________ COMPARECEU AO CCO PARA INFORMAR SOBRE A AVARIA."
+            "OPERACIONAL ___________ COMPARECEU AO CCO PARA INFORMAR SOBRE A AVARIA.",
           );
         } else if (val === "geral") {
           setV(
             "inicioFato",
-            `INSPETOR OPERACIONAL _____________ RELATA, TRATA-SE DE ______________, ENVOLVENDO O COLETIVO ______________, CONDUZIDO POR ______________________, PORTADOR DO CPF: ___________________, O MESMO RELATA _______________________________. \n\nNA ANÁLISE DAS CÂMERAS, __________________________________________.`
+            `INSPETOR OPERACIONAL _____________ RELATA, TRATA-SE DE ______________, ENVOLVENDO O COLETIVO ______________, CONDUZIDO POR ______________________, PORTADOR DO CPF: ___________________, O MESMO RELATA _______________________________. \n\nNA ANÁLISE DAS CÂMERAS, __________________________________________.`,
           );
         }
       });
 
     /* ========================================================================== */
-    /* Lógica de E-mail (Atualizada com Assunto Dinâmico)                         */
+    /* Lógica de E-mail                                                           */
     /* ========================================================================== */
 
     // 1. Definição dos e-mails
@@ -659,9 +746,8 @@
       furto: `${RAW_EMAILS.base},${RAW_EMAILS.treinamento},${RAW_EMAILS.funilaria},${RAW_EMAILS.estoque}`,
     };
 
-    // 2. Função auxiliar para gerar o Assunto (Baseada na lógica do Word)
+    // 2. Função auxiliar para gerar o Assunto
     function getFormattedSubject() {
-      // Helper simples para pegar valor limpo
       const getVal = (id) =>
         (document.getElementById(id)?.value || "").toUpperCase().trim();
 
@@ -672,21 +758,15 @@
       const logradouro = getVal("logradouro");
       const dateRaw = document.getElementById("date")?.value || "";
 
-      // Formata a data igual ao nome do arquivo (DD.MM)
-      // formatPtBrDate já existe no seu escopo global do app.js
       const dateFmt = formatPtBrDate(dateRaw);
       const dateSubject = dateFmt
         ? dateFmt.replace(/\//g, ".").slice(0, 5)
         : "";
 
-      // Monta a string: "6A1234 - 25.02 - 6000-10 - 66999 - COLISAO - RUA TESTE"
-      // Se algum campo estiver vazio, vai ficar com espaços vazios (" - - "),
-      // o que é esperado se o usuário clicar antes de preencher.
       return `${nOc} - ${dateSubject} - ${linha} - ${coletivo} - ${ocorrencia} - ${logradouro}`;
     }
 
     // 3. Listener dos botões
-    // (Certifique-se de colocar isso dentro da função wireActions ou init, onde $$ está disponível)
     const emailButtons = document.querySelectorAll(".email-trigger");
     emailButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -695,12 +775,8 @@
 
         const to = SCENARIOS[type];
         const cc = RAW_EMAILS.cc;
-
-        // AQUI ESTÁ A MÁGICA:
         const rawSubject = getFormattedSubject();
         const subject = encodeURIComponent(rawSubject);
-
-        // Corpo vazio por enquanto
         const body = "";
 
         const url = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${to}&cc=${cc}&su=${subject}&body=${body}`;
@@ -709,46 +785,35 @@
     });
 
     /* ========================================================================== */
-    /* Lógica da Planilha (Adicionar ao app.js)                                   */
+    /* Lógica da Planilha                                                         */
     /* ========================================================================== */
 
-    // CONFIGURAÇÃO DA PLANILHA (PREENCHA AQUI!)
     const SHEET_CONFIG = {
-      // A parte longa da URL: docs.google.com/spreadsheets/d/---> ISSO_AQUI <---/edit
       id: "1OcIUjqUdEszN1z0GqoqUoFJaDHdriiprTfgG61wApog",
-
-      // O ID da aba específica (gid=...). A primeira aba geralmente é "0".
       gid: "666841944",
     };
 
     function openSpreadsheetRow() {
       const nOcInput = document.getElementById("nOc");
-      const rawValue = nOcInput?.value || ""; // Ex: "6A0040"
+      const rawValue = nOcInput?.value || "";
 
-      // 1. Extrair apenas os números finais
-      // Remove "6A" e pega o resto.
       const numberPart = rawValue.toUpperCase().replace("6A", "");
-      const ocNumber = parseInt(numberPart, 10); // Converte "0040" para 40
+      const ocNumber = parseInt(numberPart, 10);
 
       if (isNaN(ocNumber)) {
         alert("Número da OC inválido para cálculo da linha.");
         return;
       }
 
-      // 2. Cálculo do Offset (Matemática)
-      // Se a OC 1 está na linha 3, o offset é +2.
       const targetRow = ocNumber + 2;
-
-      // 3. Montagem do Link
-      // range=B{row} vai focar direto na célula da coluna B naquela linha
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.id}/edit#gid=${SHEET_CONFIG.gid}&range=B${targetRow}`;
 
       window.open(url, "_blank");
     }
 
-    // Ligar o botão (Coloque dentro de wireActions)
+    // Ligar o botão
     document.getElementById("openSheet")?.addEventListener("click", (e) => {
-      e.preventDefault(); // Evita recarregar se estiver dentro de form
+      e.preventDefault();
       openSpreadsheetRow();
     });
   }
