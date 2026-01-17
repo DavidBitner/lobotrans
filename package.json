@@ -2,6 +2,6 @@
   "name": "acidentes-app",
   "version": "1.0.0",
   "dependencies": {
-    "@adobe/pdfservices-node-sdk": "^4.1.0"
+    "@adobe/pdfservices-node-sdk": "3.4.0"
   }
 }
