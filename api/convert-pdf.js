@@ -1,9 +1,9 @@
-/* api/convert-pdf.js - Versão Compatível Node.js */
-const PDFServicesSdk = require("@adobe/pdf-services-node-sdk");
+/* api/convert-pdf.js - Nome do pacote corrigido */
+// ATENÇÃO: O require abaixo deve ser EXATAMENTE assim (sem hífen em pdfservices)
+const PDFServicesSdk = require("@adobe/pdfservices-node-sdk");
 
-// Em Node.js puro, usamos module.exports em vez de export default
 module.exports = async (req, res) => {
-  // 1. Configuração de CORS (Permite que seu site converse com a API)
+  // 1. Configuração de CORS
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
@@ -15,7 +15,6 @@ module.exports = async (req, res) => {
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
   );
 
-  // Responde rápido se for apenas uma verificação do navegador (OPTIONS)
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -27,7 +26,7 @@ module.exports = async (req, res) => {
   try {
     console.log("--> Iniciando processamento Adobe...");
 
-    // 2. Verificação de Segurança das Chaves
+    // 2. Verificação de Segurança
     const clientId = process.env.ADOBE_CLIENT_ID;
     const clientSecret = process.env.ADOBE_CLIENT_SECRET;
 
@@ -38,15 +37,12 @@ module.exports = async (req, res) => {
       );
     }
 
-    // 3. Recebe o arquivo do Front-end
-    // O Vercel já entrega o body como Buffer se o Content-Type estiver correto
+    // 3. Recebe o arquivo
     const inputBuffer = req.body;
 
     if (!inputBuffer || inputBuffer.length === 0) {
       throw new Error("O arquivo Word chegou vazio na API.");
     }
-
-    console.log(`--> Arquivo recebido. Tamanho: ${inputBuffer.length} bytes`);
 
     // 4. Autenticação Adobe
     const credentials =
@@ -82,7 +78,6 @@ module.exports = async (req, res) => {
     return res.send(pdfBuffer);
   } catch (err) {
     console.error("!!! ERRO API:", err);
-    // Devolve o erro para o seu alerta no site ler
     return res.status(500).json({
       error: err.message,
       details: err.stack,
