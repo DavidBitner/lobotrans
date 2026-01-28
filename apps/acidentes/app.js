@@ -740,6 +740,30 @@
     }
   }
 
+  // --- Função auxiliar para Extração de Coordenadas ---
+  function extractCoordinates(text) {
+    const regex = /-?\d+\.\d+/g;
+    const matches = text.match(regex);
+
+    if (!matches || matches.length < 2) {
+      return null;
+    }
+
+    let lat = parseFloat(matches[0]);
+    let lng = parseFloat(matches[1]);
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      if (matches[1] >= -90 && matches[1] <= 90) {
+        lat = parseFloat(matches[1]);
+        lng = parseFloat(matches[0]);
+      } else {
+        return null;
+      }
+    }
+
+    return { lat, lng };
+  }
+
   /* ------------------------------------------------------------------------ */
   /* Event Wiring & Actions                                                   */
   /* ------------------------------------------------------------------------ */
@@ -794,6 +818,135 @@
             ui.alert("Sucesso", "Linha copiada para a área de transferência!"),
           );
     });
+
+    // Listeners do Modal de Coordenadas
+    const modalCoords = byId("modal-coords");
+    const btnOpenCoords = byId("btn-open-coords");
+    const btnCancelCoords = byId("btn-coords-cancel");
+    const btnApplyCoords = byId("btn-coords-apply");
+    const inputCoords = byId("coords-input");
+
+    if (btnOpenCoords) {
+      btnOpenCoords.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (inputCoords) inputCoords.value = "";
+        if (modalCoords) {
+          modalCoords.classList.add("show");
+          setTimeout(() => inputCoords && inputCoords.focus(), 100);
+        }
+      });
+    }
+
+    if (btnCancelCoords) {
+      btnCancelCoords.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (modalCoords) modalCoords.classList.remove("show");
+      });
+    }
+
+    // =========================================================================
+    // Lógica do Botão PROCESSAR (Modal de Coordenadas)
+    // =========================================================================
+    if (btnApplyCoords) {
+      btnApplyCoords.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        const inputCoords = document.getElementById("coords-input");
+        const text = inputCoords ? inputCoords.value : "";
+        const coords = extractCoordinates(text);
+
+        if (coords) {
+          // 1. Fecha o modal visualmente
+          if (byId("modal-coords"))
+            byId("modal-coords").classList.remove("show");
+
+          // 2. Prepara o campo para receber os dados
+          const logradouroInput = byId("logradouro");
+          // Guarda o valor atual caso precise reverter
+          const originalValue = logradouroInput.value;
+
+          // Feedback visual: "Carregando..."
+          logradouroInput.value = "BUSCANDO ENDEREÇO NO GOOGLE...";
+          logradouroInput.setAttribute("readonly", true);
+
+          try {
+            // 3. Chama nossa API no Vercel (Backend)
+            const response = await fetch("/api/geocode", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(coords),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok)
+              throw new Error(data.error || "Erro desconhecido na API");
+
+            // 4. Limpeza e Formatação do Endereço
+            // O Google retorna: "Rua Exemplo, 123 - Bairro, Cidade - SP, Brasil"
+            let cleanAddress = data.address;
+
+            // Se quiser remover o " - SP, Brasil" do final para ficar mais curto:
+            // cleanAddress = cleanAddress.split(" - ")[0];
+
+            logradouroInput.value = cleanAddress.toUpperCase();
+            logradouroInput.removeAttribute("readonly");
+            logradouroInput.dispatchEvent(new Event("input")); // Salva no LocalStorage
+
+            // 5. Preenchimento Inteligente de Campos Extras (Número e Bairro)
+            if (data.components) {
+              // Tenta achar o número
+              const numComp = data.components.find((c) =>
+                c.types.includes("street_number"),
+              );
+              if (numComp) {
+                const numInput = byId("numero");
+                // Só preenche se o campo estiver vazio ou se quiser forçar
+                numInput.value = numComp.long_name;
+                numInput.dispatchEvent(new Event("input"));
+              }
+
+              // Tenta achar o bairro
+              const bairroComp = data.components.find(
+                (c) =>
+                  c.types.includes("sublocality") ||
+                  c.types.includes("sublocality_level_1"),
+              );
+              if (bairroComp) {
+                const bairroInput = byId("bairro");
+                bairroInput.value = bairroComp.long_name.toUpperCase();
+                bairroInput.dispatchEvent(new Event("input"));
+              }
+            }
+
+            ui.alert(
+              "Endereço Encontrado",
+              `Coordenadas: <strong>${coords.lat}, ${coords.lng}</strong><br><br>` +
+                `Endereço: <strong>${data.address}</strong>`,
+            );
+          } catch (err) {
+            console.error("Falha no geocoding:", err);
+
+            // Em caso de erro (ex: Cota estourada), preenche apenas com o GPS
+            logradouroInput.value = `GPS: ${coords.lat}, ${coords.lng}`;
+            logradouroInput.removeAttribute("readonly");
+            logradouroInput.dispatchEvent(new Event("input"));
+
+            ui.alert(
+              "Aviso",
+              `Não foi possível obter o endereço completo.<br>` +
+                `<small>Erro: ${err.message}</small><br><br>` +
+                `O campo foi preenchido com as coordenadas GPS.`,
+            );
+          }
+        } else {
+          ui.alert(
+            "Erro",
+            "Não foi possível identificar coordenadas válidas no texto colado.\nTente colar algo como: -23.5505, -46.6333",
+          );
+        }
+      });
+    }
 
     const pasteArea = byId("paste-area");
     if (pasteArea) {
@@ -906,9 +1059,15 @@
 
         const to = SCENARIOS[type];
         const cc = RAW_EMAILS.cc;
+
+        // Assunto
         const rawSubject = getFormattedSubject();
         const subject = encodeURIComponent(rawSubject);
-        const body = "";
+
+        // \n significa "pular linha"
+        const rawBody =
+          "Prezados,\n\nSegue em anexo a ocorrência.\n\nAtt. __________";
+        const body = encodeURIComponent(rawBody);
 
         const url = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${to}&cc=${cc}&su=${subject}&body=${body}`;
         window.open(url, "_blank");

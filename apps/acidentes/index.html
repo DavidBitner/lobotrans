@@ -12,9 +12,7 @@
     <div class="form-container">
       <h2>Formulario de Ocorrência</h2>
 
-      <!-- General Group -->
       <h3>Geral</h3>
-      <!-- Field 1: Nº OC -->
       <section class="form-section">
         <label for="nOc">Nº OC (Formato: 6A****):</label>
         <input
@@ -30,7 +28,6 @@
         >
       </section>
 
-      <!-- Field 2: Ocorrência -->
       <section class="form-section">
         <label for="ocorrencia"
           >Ocorrência (ex: Colisão x auto, Eventualidade, Atendimento a mal
@@ -48,7 +45,6 @@
         >
       </section>
 
-      <!-- Field 3: Coletivo -->
       <section class="form-section">
         <label for="coletivo">Coletivo (Formato: 66***):</label>
         <input
@@ -65,7 +61,6 @@
         >
       </section>
 
-      <!-- Field 4: Linha -->
       <section class="form-section">
         <label for="linha">Linha (Formato: XXXX-XX):</label>
         <input
@@ -81,34 +76,44 @@
         >
       </section>
 
-      <!-- Field 5: Data (using type="date") -->
       <section class="form-section">
         <label for="date">Data:</label>
         <input type="date" id="date" name="date" required />
         <small id="dateError">Por favor, insira uma data válida</small>
       </section>
 
-      <!-- Field 6: Hora (using type="time") -->
       <section class="form-section">
         <label for="time">Hora:</label>
         <input type="time" id="time" name="time" required placeholder="HH:MM" />
         <small id="timeError">Por favor, insira um horário válido</small>
       </section>
 
-      <!-- Field 7: Logradouro -->
       <section class="form-section">
         <label for="logradouro">Logradouro (Endereço):</label>
-        <input
-          type="text"
-          id="logradouro"
-          name="logradouro"
-          required
-          placeholder="Endereço onde ocorreu a ocorrência"
-        />
+        <div class="input-with-button">
+          <input
+            type="text"
+            id="logradouro"
+            name="logradouro"
+            required
+            placeholder="Endereço onde ocorreu a ocorrência"
+          />
+          <button
+            type="button"
+            id="btn-open-coords"
+            class="button-icon"
+            title="Inserir Coordenadas"
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+              />
+            </svg>
+          </button>
+        </div>
         <small id="logradouroError">Por favor, insira um endereço válido</small>
       </section>
 
-      <!-- Field 8: Nº -->
       <section class="form-section">
         <label for="numero">Nº (Número do endereço):</label>
         <input
@@ -124,7 +129,6 @@
         >
       </section>
 
-      <!-- Field 9: Bairro -->
       <section class="form-section">
         <label for="bairro">Bairro:</label>
         <input
@@ -137,11 +141,9 @@
         <small id="bairroError">Por favor, insira um bairro válido</small>
       </section>
 
-      <!-- Driver -->
       <section class="form-section">
         <div class="driver-entry">
           <h5>Motorista</h5>
-          <!-- Dynamic title for driver entry -->
           <label for="driverName">Nome:</label>
           <input
             type="text"
@@ -171,9 +173,7 @@
         </div>
       </section>
 
-      <!-- Description Group -->
       <h3>Descrição</h3>
-      <!-- Section title for visual separation -->
       <section class="form-section">
         <p class="disclaimer">
           Recomendado preencher os próximos dois campos com o CAPSLOCK desligado
@@ -199,7 +199,6 @@
         ></textarea>
       </section>
 
-      <!-- Specifics Group -->
       <h3>Informações Específicas</h3>
       <section class="form-section">
         <div class="victim-entry">
@@ -317,12 +316,10 @@
         </div>
       </section>
 
-      <!-- General -->
       <h3>General</h3>
       <section class="form-section">
         <h3>Grupo 1</h3>
         <div class="field-group">
-          <!-- Group 1 Fields -->
           <div class="field-column">
             <label for="prat">PRAT</label>
             <input type="text" id="prat" name="prat" placeholder="NÃO HOUVE" />
@@ -352,7 +349,6 @@
       <section class="form-section">
         <h3>Grupo 2</h3>
         <div class="field-group">
-          <!-- Group 2 Fields -->
           <div class="field-column">
             <label for="sptrans">SPTRANS</label>
             <input
@@ -382,7 +378,6 @@
       <section class="form-section">
         <h3>Grupo 3</h3>
         <div class="field-group">
-          <!-- Group 3 Fields -->
           <div class="field-column">
             <label for="bo">B.O</label>
             <input type="text" id="bo" name="bo" placeholder="NÃO HOUVE" />
@@ -425,7 +420,6 @@
       <section class="form-section">
         <h3>Interno</h3>
         <div class="field-group" id="interno">
-          <!-- Group 4 Fields -->
           <div class="field-column">
             <label for="cco">CCO (Responsável pela ocorrência)</label>
             <input
@@ -602,7 +596,6 @@
       </button>
     </div>
 
-    <!-- Modal Container -->
     <div id="modal" class="modal">
       <div class="modal-content">
         <h2>Notes</h2>
@@ -783,6 +776,42 @@
       </div>
     </div>
 
+    <div id="modal-coords" class="modal">
+      <div class="modal-content" style="max-width: 500px">
+        <h3>Insira Coordenadas</h3>
+        <p style="color: #666; margin-bottom: 15px">
+          Cole as informações de GPS abaixo. O sistema identificará a Latitude e
+          Longitude automaticamente.
+        </p>
+
+        <textarea
+          id="coords-input"
+          rows="5"
+          class="full-width"
+          placeholder="Exemplo: Latitude: -23.8408... Longitude: -46.7194..."
+          style="font-family: monospace; font-size: 14px"
+        ></textarea>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px">
+          <button class="button" id="btn-coords-cancel" style="flex: 1">
+            <span class="shadow"></span>
+            <span class="edge"></span>
+            <div class="front" style="background: #777">
+              <span>CANCELAR</span>
+            </div>
+          </button>
+
+          <button class="button" id="btn-coords-apply" style="flex: 1">
+            <span class="shadow"></span>
+            <span class="edge"></span>
+            <div class="front">
+              <span>PROCESSAR</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="modal-system" class="modal">
       <div class="modal-content">
         <h3 id="sys-title" style="margin-top: 0; margin-bottom: 15px">Aviso</h3>
@@ -808,9 +837,7 @@
     </div>
 
     <a class="back-home-btn" href="../../" aria-label="Back to home">
-      <!-- Inline wolf icon (replace with your own SVG if you have a brand mark) -->
       <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
-        <!-- simplified wolf/fox head -->
         <path
           fill="currentColor"
           d="M12 2l2.6 2.7L17 2l2 5.6V14l-3.8-1.6L12 20l-3.2-7.6L5 14V7.6L7 2l2.4 2.7L12 2z"
@@ -822,7 +849,6 @@
       </svg>
     </a>
 
-    <!-- Fixed options panel (Acidentes) -->
     <aside class="opts-panel" aria-labelledby="opts-a-title">
       <h3 id="opts-a-title">OPÇÕES</h3>
 
