@@ -845,7 +845,7 @@
     }
 
     // =========================================================================
-    // Lógica do Botão PROCESSAR (Modal de Coordenadas)
+    // Lógica do Botão PROCESSAR (Modal de Coordenadas) - ATUALIZADO
     // =========================================================================
     if (btnApplyCoords) {
       btnApplyCoords.addEventListener("click", async (e) => {
@@ -860,17 +860,17 @@
           if (byId("modal-coords"))
             byId("modal-coords").classList.remove("show");
 
-          // 2. Prepara o campo para receber os dados
+          // 2. Referência aos campos
           const logradouroInput = byId("logradouro");
-          // Guarda o valor atual caso precise reverter
-          const originalValue = logradouroInput.value;
+          const numeroInput = byId("numero");
+          const bairroInput = byId("bairro");
 
           // Feedback visual: "Carregando..."
-          logradouroInput.value = "BUSCANDO ENDEREÇO NO GOOGLE...";
+          logradouroInput.value = "BUSCANDO...";
           logradouroInput.setAttribute("readonly", true);
 
           try {
-            // 3. Chama nossa API no Vercel (Backend)
+            // 3. Chama nossa API
             const response = await fetch("/api/geocode", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -879,71 +879,77 @@
 
             const data = await response.json();
 
-            if (!response.ok)
-              throw new Error(data.error || "Erro desconhecido na API");
+            if (!response.ok) throw new Error(data.error || "Erro na API");
 
-            // 4. Limpeza e Formatação do Endereço
-            // O Google retorna: "Rua Exemplo, 123 - Bairro, Cidade - SP, Brasil"
-            let cleanAddress = data.address;
+            // 4. Extração Cirúrgica (Usa os componentes separados, não o texto completo)
+            let street = "";
+            let number = "";
+            let neighborhood = "";
 
-            // Se quiser remover o " - SP, Brasil" do final para ficar mais curto:
-            // cleanAddress = cleanAddress.split(" - ")[0];
-
-            logradouroInput.value = cleanAddress.toUpperCase();
-            logradouroInput.removeAttribute("readonly");
-            logradouroInput.dispatchEvent(new Event("input")); // Salva no LocalStorage
-
-            // 5. Preenchimento Inteligente de Campos Extras (Número e Bairro)
             if (data.components) {
-              // Tenta achar o número
-              const numComp = data.components.find((c) =>
-                c.types.includes("street_number"),
-              );
-              if (numComp) {
-                const numInput = byId("numero");
-                // Só preenche se o campo estiver vazio ou se quiser forçar
-                numInput.value = numComp.long_name;
-                numInput.dispatchEvent(new Event("input"));
-              }
+              data.components.forEach((c) => {
+                // 'route' é o nome da rua/avenida no Google Maps
+                if (c.types.includes("route")) street = c.long_name;
 
-              // Tenta achar o bairro
-              const bairroComp = data.components.find(
-                (c) =>
+                // 'street_number' é o número
+                if (c.types.includes("street_number")) number = c.long_name;
+
+                // 'sublocality' é o bairro
+                if (
                   c.types.includes("sublocality") ||
-                  c.types.includes("sublocality_level_1"),
-              );
-              if (bairroComp) {
-                const bairroInput = byId("bairro");
-                bairroInput.value = bairroComp.long_name.toUpperCase();
-                bairroInput.dispatchEvent(new Event("input"));
-              }
+                  c.types.includes("sublocality_level_1")
+                ) {
+                  neighborhood = c.long_name;
+                }
+              });
             }
 
+            // 5. Preenchimento dos Campos
+            logradouroInput.removeAttribute("readonly");
+
+            // LOGRADOURO: Prioriza o componente 'route'. Se falhar, tenta limpar o endereço completo.
+            if (street) {
+              logradouroInput.value = street.toUpperCase();
+            } else {
+              // Fallback: Pega "Rua X, 123" e tenta ficar só com "Rua X"
+              let clean = data.address.split(" - ")[0];
+              if (clean.includes(",")) clean = clean.split(",")[0];
+              logradouroInput.value = clean.toUpperCase();
+            }
+
+            // NÚMERO
+            if (number) numeroInput.value = number;
+
+            // BAIRRO
+            if (neighborhood) bairroInput.value = neighborhood.toUpperCase();
+
+            // Dispara eventos para salvar no LocalStorage
+            logradouroInput.dispatchEvent(new Event("input"));
+            numeroInput.dispatchEvent(new Event("input"));
+            bairroInput.dispatchEvent(new Event("input"));
+
+            // Confirmação para o usuário
             ui.alert(
               "Endereço Encontrado",
-              `Coordenadas: <strong>${coords.lat}, ${coords.lng}</strong><br><br>` +
-                `Endereço: <strong>${data.address}</strong>`,
+              `<strong>Rua:</strong> ${logradouroInput.value}<br>` +
+                `<strong>Nº:</strong> ${numeroInput.value}<br>` +
+                `<strong>Bairro:</strong> ${bairroInput.value}`,
             );
           } catch (err) {
-            console.error("Falha no geocoding:", err);
+            console.error("Geocoding error:", err);
 
-            // Em caso de erro (ex: Cota estourada), preenche apenas com o GPS
+            // Em caso de erro, preenche apenas com o GPS
             logradouroInput.value = `GPS: ${coords.lat}, ${coords.lng}`;
             logradouroInput.removeAttribute("readonly");
             logradouroInput.dispatchEvent(new Event("input"));
 
             ui.alert(
               "Aviso",
-              `Não foi possível obter o endereço completo.<br>` +
-                `<small>Erro: ${err.message}</small><br><br>` +
-                `O campo foi preenchido com as coordenadas GPS.`,
+              "Não foi possível detalhar o endereço. Usando coordenadas GPS.",
             );
           }
         } else {
-          ui.alert(
-            "Erro",
-            "Não foi possível identificar coordenadas válidas no texto colado.\nTente colar algo como: -23.5505, -46.6333",
-          );
+          ui.alert("Erro", "Coordenadas inválidas.");
         }
       });
     }
