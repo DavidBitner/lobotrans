@@ -845,7 +845,7 @@
     }
 
     // =========================================================================
-    // Lógica do Botão PROCESSAR (Modal de Coordenadas) - ATUALIZADO
+    // Lógica do Botão PROCESSAR (Modal de Coordenadas) - VERSÃO FINAL
     // =========================================================================
     if (btnApplyCoords) {
       btnApplyCoords.addEventListener("click", async (e) => {
@@ -856,21 +856,21 @@
         const coords = extractCoordinates(text);
 
         if (coords) {
-          // 1. Fecha o modal visualmente
+          // 1. Fecha o modal visualmente se ele existir
           if (byId("modal-coords"))
             byId("modal-coords").classList.remove("show");
 
-          // 2. Referência aos campos
+          // 2. Referência aos campos do formulário
           const logradouroInput = byId("logradouro");
           const numeroInput = byId("numero");
           const bairroInput = byId("bairro");
 
-          // Feedback visual: "Carregando..."
-          logradouroInput.value = "BUSCANDO...";
+          // Feedback visual: Trava o campo e mostra mensagem
+          logradouroInput.value = "BUSCANDO ENDEREÇO...";
           logradouroInput.setAttribute("readonly", true);
 
           try {
-            // 3. Chama nossa API
+            // 3. Chama nossa API (Backend Vercel)
             const response = await fetch("/api/geocode", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -881,75 +881,104 @@
 
             if (!response.ok) throw new Error(data.error || "Erro na API");
 
-            // 4. Extração Cirúrgica (Usa os componentes separados, não o texto completo)
+            // 4. Extração Inteligente de Componentes
+            // Variáveis para guardar os pedaços do endereço
             let street = "";
             let number = "";
-            let neighborhood = "";
+            let neighborhood = ""; // Bairro específico (Ex: Jd. Marilda)
+            let sublocality = ""; // Subdistrito (Ex: Engenheiro Marsilac)
+            let administrative_area = ""; // Município/Região (Ex: Parelheiros)
 
             if (data.components) {
               data.components.forEach((c) => {
-                // 'route' é o nome da rua/avenida no Google Maps
+                // RUA (route)
                 if (c.types.includes("route")) street = c.long_name;
 
-                // 'street_number' é o número
+                // NÚMERO (street_number)
                 if (c.types.includes("street_number")) number = c.long_name;
 
-                // 'sublocality' é o bairro
+                // BAIRRO - Nível 1 (neighborhood) - O mais específico
+                if (c.types.includes("neighborhood")) {
+                  neighborhood = c.long_name;
+                }
+
+                // BAIRRO - Nível 2 (sublocality) - Fallback comum
                 if (
                   c.types.includes("sublocality") ||
                   c.types.includes("sublocality_level_1")
                 ) {
-                  neighborhood = c.long_name;
+                  sublocality = c.long_name;
+                }
+
+                // BAIRRO - Nível 3 (administrative_area_level_2) - Último recurso
+                if (c.types.includes("administrative_area_level_2")) {
+                  administrative_area = c.long_name;
                 }
               });
             }
 
-            // 5. Preenchimento dos Campos
+            // 5. Preenchimento dos Campos no Formulário
             logradouroInput.removeAttribute("readonly");
 
-            // LOGRADOURO: Prioriza o componente 'route'. Se falhar, tenta limpar o endereço completo.
+            // --- RUA ---
             if (street) {
               logradouroInput.value = street.toUpperCase();
             } else {
-              // Fallback: Pega "Rua X, 123" e tenta ficar só com "Rua X"
+              // Se não achar a rua (comum em estradas rurais), tenta limpar o endereço completo
+              // Ex: "Estrada da Barragem, s/n - Marsilac..." vira "ESTRADA DA BARRAGEM"
               let clean = data.address.split(" - ")[0];
               if (clean.includes(",")) clean = clean.split(",")[0];
               logradouroInput.value = clean.toUpperCase();
             }
 
-            // NÚMERO
+            // --- NÚMERO ---
             if (number) numeroInput.value = number;
 
-            // BAIRRO
-            if (neighborhood) bairroInput.value = neighborhood.toUpperCase();
+            // --- BAIRRO (A Lógica da Prioridade) ---
+            // Tenta o mais específico. Se não tiver, vai descendo o nível.
+            if (neighborhood) {
+              bairroInput.value = neighborhood.toUpperCase();
+            } else if (sublocality) {
+              bairroInput.value = sublocality.toUpperCase();
+            } else if (administrative_area) {
+              // Caso extremo onde nem bairro nem subdistrito aparecem
+              bairroInput.value = administrative_area.toUpperCase();
+            }
 
-            // Dispara eventos para salvar no LocalStorage
+            // 6. Salvar e Notificar
+            // Dispara eventos 'input' para garantir que o navegador/app salve o valor
             logradouroInput.dispatchEvent(new Event("input"));
             numeroInput.dispatchEvent(new Event("input"));
             bairroInput.dispatchEvent(new Event("input"));
 
-            // Confirmação para o usuário
+            // Mostra o alerta de sucesso com os dados encontrados
             ui.alert(
               "Endereço Encontrado",
-              `<strong>Rua:</strong> ${logradouroInput.value}<br>` +
-                `<strong>Nº:</strong> ${numeroInput.value}<br>` +
-                `<strong>Bairro:</strong> ${bairroInput.value}`,
+              `<div style="text-align:left; margin-top:10px;">` +
+                `<strong>Rua:</strong> ${logradouroInput.value}<br>` +
+                `<strong>Nº:</strong> ${numeroInput.value || "(Sem número)"}<br>` +
+                `<strong>Bairro:</strong> ${bairroInput.value}` +
+                `</div>`,
             );
           } catch (err) {
             console.error("Geocoding error:", err);
 
-            // Em caso de erro, preenche apenas com o GPS
+            // Tratamento de Erro: Preenche apenas com o GPS
             logradouroInput.value = `GPS: ${coords.lat}, ${coords.lng}`;
             logradouroInput.removeAttribute("readonly");
             logradouroInput.dispatchEvent(new Event("input"));
 
             ui.alert(
-              "Aviso",
-              "Não foi possível detalhar o endereço. Usando coordenadas GPS.",
+              "Atenção",
+              `O Google não retornou o nome da rua para estas coordenadas.<br>` +
+                `O campo foi preenchido com o GPS.`,
             );
           }
         } else {
-          ui.alert("Erro", "Coordenadas inválidas.");
+          ui.alert(
+            "Erro",
+            "Coordenadas inválidas. Tente colar no formato: -23.1234, -46.1234",
+          );
         }
       });
     }
