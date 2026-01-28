@@ -830,34 +830,49 @@
     </div>
 
     <div id="modal-map" class="modal">
-      <div class="modal-content" style="max-width: 600px">
-        <h3>Confirme o Local</h3>
-
-        <p
-          id="map-address-text"
+      <div
+        class="modal-content"
+        style="
+          width: 90%;
+          max-width: 1000px;
+          height: 90vh;
+          display: flex;
+          flex-direction: column;
+          padding: 0;
+        "
+      >
+        <div
           style="
-            margin-bottom: 15px;
-            font-weight: bold;
-            color: var(--primary-color);
+            padding: 20px 30px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
           "
         >
-          Carregando...
-        </p>
+          <h3 style="margin-top: 0; margin-bottom: 10px; border: none">
+            Confirme o Local
+          </h3>
+          <p
+            id="map-address-text"
+            style="
+              margin: 0;
+              font-weight: bold;
+              color: var(--primary-color);
+              font-size: 1.1rem;
+            "
+          >
+            Carregando...
+          </p>
+        </div>
 
         <div
           class="map-container"
-          style="
-            width: 100%;
-            height: 300px;
-            background: #333;
-            margin-bottom: 20px;
-          "
+          style="flex: 1; background: #eee; position: relative"
         >
           <iframe
             id="google-map-frame"
             width="100%"
             height="100%"
-            style="border: 0"
+            style="border: 0; position: absolute; top: 0; left: 0"
             allowfullscreen=""
             loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"
@@ -865,17 +880,37 @@
           </iframe>
         </div>
 
-        <div class="modal-buttons">
-          <button id="btn-confirm-map" class="btn-primary">
-            CONFIRMAR ENDEREÇO
-          </button>
+        <div
+          class="modal-buttons"
+          style="
+            padding: 20px 30px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+          "
+        >
           <button
-            class="btn-secondary"
+            class="button"
             onclick="
               document.getElementById('modal-map').classList.remove('show')
             "
+            style="width: 150px"
           >
-            VOLTAR
+            <span class="shadow"></span>
+            <span class="edge"></span>
+            <div class="front" style="background: #777">
+              <span>VOLTAR</span>
+            </div>
+          </button>
+
+          <button id="btn-confirm-map" class="button" style="width: 200px">
+            <span class="shadow"></span>
+            <span class="edge"></span>
+            <div class="front">
+              <span>CONFIRMAR</span>
+            </div>
           </button>
         </div>
       </div>
