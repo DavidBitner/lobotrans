@@ -66,7 +66,6 @@
 
       if (actions) {
         actions.innerHTML = "";
-
         const btnCancel = document.createElement("button");
         btnCancel.className = "button";
         btnCancel.style.flex = "1";
@@ -768,23 +767,20 @@
 
             if (mapText) mapText.textContent = displayAddress;
 
-            // ATUALIZAÇÃO: Zoom 19 e Tipo Híbrido (Satélite + Ruas) para melhor visualização
+            // Usa URL de Embed padrão (sem chave exposta, zoom 17, mapa normal)
             if (mapFrame) {
-              // t=h (Hybrid), z=19 (Zoom Close), iwloc=near (Pin no centro)
-              mapFrame.src = `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&t=h&z=19&ie=UTF8&iwloc=&output=embed`;
+              mapFrame.src = `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=17&output=embed`;
             }
 
             if (modalMap) modalMap.classList.add("show");
 
-            // Configura botão de confirmar (clona para limpar listeners antigos)
+            // Configura botão de confirmar (clona para limpar listeners)
             if (btnConfirmMap) {
               const newBtn = btnConfirmMap.cloneNode(true);
               btnConfirmMap.parentNode.replaceChild(newBtn, btnConfirmMap);
-
               newBtn.addEventListener("click", () => {
                 if (modalMap) modalMap.classList.remove("show");
-                // Feedback sutil
-                ui.alert("Sucesso", "Localização confirmada.");
+                ui.alert("Sucesso", "Endereço confirmado.");
               });
             }
           } catch (err) {
