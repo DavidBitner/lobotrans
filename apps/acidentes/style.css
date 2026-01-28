@@ -341,6 +341,21 @@ small {
   margin-top: 40px;
 }
 
+/* Aviso de Atenção (Amarelo) */
+.warning-msg {
+  background-color: #fff8e1;
+  border-left: 4px solid var(--primary-color);
+  color: #555;
+  padding: 10px 15px;
+  margin-top: 15px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.warning-msg strong {
+  color: #d49a00;
+}
+
 /* --- Modal Específico: Mapa Grande --- */
 #modal-map .modal-content {
   width: 95%; /* Ocupa quase toda a largura da tela */
@@ -536,21 +551,32 @@ td {
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 200px;
-  padding: 12px;
+  width: auto;
+  min-width: 200px;
+  max-width: 300px;
+  padding: 15px;
   border-radius: 12px;
   background: #121316;
   color: #f2f2f2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  text-align: left;
   font-size: 12px;
+  line-height: 1.5;
   z-index: 9990;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .fixed-box p {
   margin: 6px 0;
+  word-wrap: break-word;
 }
+
 .fixed-box .label {
   color: var(--primary-color);
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 5px;
 }
 
 .sr-only {

@@ -317,7 +317,7 @@
         </div>
       </section>
 
-      <h3>General</h3>
+      <h3>Geral</h3>
       <section class="form-section">
         <h3>Grupo 1</h3>
         <div class="field-group">
@@ -752,6 +752,13 @@
           placeholder="Exemplo: Latitude: -23.8408... Longitude: -46.7194..."
           style="font-family: monospace; font-size: 14px"
         ></textarea>
+
+        <p class="warning-msg">
+          <strong>Atenção:</strong> Nem sempre o endereço retornado pelo GPS
+          estará 100% correto (especialmente em áreas rurais ou sem numeração
+          exata).<br />Fique atento para corrigir se necessário.
+        </p>
+
         <div style="margin-top: 20px; display: flex; gap: 10px">
           <button class="button" id="btn-coords-cancel" style="flex: 1">
             <span class="shadow"></span><span class="edge"></span>
@@ -802,7 +809,7 @@
             border-bottom: 1px solid #eee;
           "
         >
-          <h3 style="margin-top: 0; margin-bottom: 10px; border: none">
+          <h3 style="margin-top: 0; margin-bottom: 5px; border: none">
             Confirme o Local
           </h3>
           <p
@@ -815,6 +822,12 @@
             "
           >
             Carregando...
+          </p>
+
+          <p class="warning-msg" style="margin-top: 10px; margin-bottom: 0">
+            <strong>Verifique no mapa:</strong> O pino está no local correto? Se
+            estiver errado, clique em VOLTAR e tente ajustar as coordenadas ou
+            edite o endereço manualmente depois.
           </p>
         </div>
         <div
