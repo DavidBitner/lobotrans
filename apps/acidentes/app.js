@@ -737,50 +737,87 @@
               });
             }
 
-            // Preenchimento
-            logradouroInput.removeAttribute("readonly");
-            if (street) logradouroInput.value = street.toUpperCase();
+            // Define os valores finais (mas NÃO preenche os campos ainda)
+            let finalStreet = "";
+            if (street) finalStreet = street.toUpperCase();
             else {
               let clean = data.address.split(" - ")[0];
               if (clean.includes(",")) clean = clean.split(",")[0];
-              logradouroInput.value = clean.toUpperCase();
+              finalStreet = clean.toUpperCase();
             }
 
-            if (number) numeroInput.value = number;
+            let finalNumber = number || "";
 
-            // Prioridade de Bairro
-            if (neighborhood) bairroInput.value = neighborhood.toUpperCase();
-            else if (sublocality) bairroInput.value = sublocality.toUpperCase();
-            else if (adm_area) bairroInput.value = adm_area.toUpperCase();
+            let finalBairro = "";
+            if (neighborhood) finalBairro = neighborhood.toUpperCase();
+            else if (sublocality) finalBairro = sublocality.toUpperCase();
+            else if (adm_area) finalBairro = adm_area.toUpperCase();
 
-            // Dispara inputs para salvar/validar
-            logradouroInput.dispatchEvent(new Event("input"));
-            numeroInput.dispatchEvent(new Event("input"));
-            bairroInput.dispatchEvent(new Event("input"));
+            // Limpa o estado de "carregando"
+            logradouroInput.value = "";
+            logradouroInput.removeAttribute("readonly");
 
             // --- Lógica do Modal de Mapa ---
-            const displayAddress = `${logradouroInput.value}, ${numeroInput.value || "S/N"} - ${bairroInput.value}`;
+            const displayAddress = `${finalStreet}, ${finalNumber || "S/N"} - ${finalBairro}`;
             const mapText = byId("map-address-text");
             const mapFrame = byId("google-map-frame");
             const modalMap = byId("modal-map");
+
+            // Referências aos botões do Modal de Mapa
             const btnConfirmMap = byId("btn-confirm-map");
+            const btnMapBack = byId("btn-map-back");
 
             if (mapText) mapText.textContent = displayAddress;
 
-            // Usa URL de Embed padrão (sem chave exposta, zoom 17, mapa normal)
+            // Usa URL de Embed padrão (sem chave exposta, zoom 19, mapa normal)
             if (mapFrame) {
-              mapFrame.src = `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=17&output=embed`;
+              mapFrame.src = `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=19&output=embed`;
             }
 
             if (modalMap) modalMap.classList.add("show");
 
-            // Configura botão de confirmar (clona para limpar listeners)
+            // Helper para limpar erros visualmente
+            const forceClearError = (input, errorId) => {
+              if (input) {
+                input.classList.remove("invalid");
+                input.classList.add("valid");
+              }
+              const err = byId(errorId);
+              if (err) err.style.display = "none";
+            };
+
+            // Lógica do Botão VOLTAR (Reabre o modal de coordenadas)
+            if (btnMapBack) {
+              const newBack = btnMapBack.cloneNode(true);
+              btnMapBack.parentNode.replaceChild(newBack, btnMapBack);
+              newBack.addEventListener("click", () => {
+                modalMap.classList.remove("show");
+                if (modalCoords) modalCoords.classList.add("show");
+              });
+            }
+
+            // Lógica do Botão CONFIRMAR (Preenche os campos e fecha)
             if (btnConfirmMap) {
               const newBtn = btnConfirmMap.cloneNode(true);
               btnConfirmMap.parentNode.replaceChild(newBtn, btnConfirmMap);
               newBtn.addEventListener("click", () => {
+                // Preenche
+                logradouroInput.value = finalStreet;
+                numeroInput.value = finalNumber;
+                bairroInput.value = finalBairro;
+
+                // Salva e valida
+                logradouroInput.dispatchEvent(new Event("input"));
+                numeroInput.dispatchEvent(new Event("input"));
+                bairroInput.dispatchEvent(new Event("input"));
+
+                // Força a limpeza visual de erros (caso o validador não pegue imediatamente)
+                forceClearError(logradouroInput, "logradouroError");
+                forceClearError(numeroInput, "numeroError");
+                forceClearError(bairroInput, "bairroError");
+
                 if (modalMap) modalMap.classList.remove("show");
-                ui.alert("Sucesso", "Endereço confirmado.");
+                ui.alert("Sucesso", "Endereço confirmado e preenchido.");
               });
             }
           } catch (err) {
