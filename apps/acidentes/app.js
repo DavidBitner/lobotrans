@@ -899,7 +899,7 @@
     /* ========================================================================== */
     const RAW_EMAILS = {
       cc: "reinaldooperacional@wolffsp.com,robertooperacional@wolffsp.com,celsooperacional@wolffsp.com,yvanoperacional@wolffsp.com",
-      base: "mauricio.oliveira@wolffsp.com,sinistro@wolffsp.com,beatrizsinistro@wolffsp.com,gustavosinistro@wolffsp.com,maianesinistro@wolffsp.com",
+      base: "danilo.silva@wolffsp.com,sinistro@wolffsp.com,beatrizsinistro@wolffsp.com,gustavosinistro@wolffsp.com,maianesinistro@wolffsp.com",
       funilaria: "funilariad10@wolffsp.com",
       treinamento: "treinamento1@wolffsp.com",
       estoque: "estoquepecasd10@wolffsp.com",
@@ -962,3 +962,4 @@
 
   document.addEventListener("DOMContentLoaded", init);
 })();
+
