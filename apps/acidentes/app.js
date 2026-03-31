@@ -1,29 +1,26 @@
 /* ========================================================================== */
-/* Accident Report App - Final Version with Adobe PDF & Custom UI             */
+/* Accident Report App - Final Version                                        */
 /* ========================================================================== */
 
 (() => {
   "use strict";
 
-  /* ------------------------------------------------------------------------ */
-  /* Config & State                                                           */
-  /* ------------------------------------------------------------------------ */
+  /* ========================================================================== */
+  /* Config & State                                                             */
+  /* ========================================================================== */
   const APP_NS = "acidentes:";
   const YEAR_SUFFIX = "2026";
-
   const MAX_DOC_WIDTH = 680;
   const MAX_DOC_HEIGHT = 800;
 
   let attachedImages = [];
   let imageDimensionsCache = {};
-
-  // Variáveis para segurar o documento enquanto o usuário escolhe o formato
   let currentDocBlob = null;
   let currentFileName = "";
 
-  /* ------------------------------------------------------------------------ */
-  /* DOM Utilities                                                            */
-  /* ------------------------------------------------------------------------ */
+  /* ========================================================================== */
+  /* DOM Utilities                                                              */
+  /* ========================================================================== */
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const byId = (id) => document.getElementById(id);
@@ -34,11 +31,10 @@
     if (el) el.textContent = text;
   };
 
-  /* ------------------------------------------------------------------------ */
-  /* Custom UI Alerts (Substitui alert/confirm nativos)                       */
-  /* ------------------------------------------------------------------------ */
+  /* ========================================================================== */
+  /* UI: Alerts & Modals                                                        */
+  /* ========================================================================== */
   const ui = {
-    // Exibe um alerta simples (Botão OK)
     alert: (title, message) => {
       const titleEl = byId("sys-title");
       const msgEl = byId("sys-msg");
@@ -49,18 +45,16 @@
       if (msgEl) msgEl.innerHTML = message.replace(/\n/g, "<br>");
 
       if (actions) {
-        actions.innerHTML = ""; // Limpa botões antigos
+        actions.innerHTML = "";
         const btn = document.createElement("button");
         btn.className = "button";
         btn.innerHTML = `<span class="shadow"></span><span class="edge"></span><div class="front"><span>OK</span></div>`;
         btn.onclick = () => modal.classList.remove("show");
         actions.appendChild(btn);
       }
-
       if (modal) modal.classList.add("show");
     },
 
-    // Exibe confirmação (Botões Cancelar / Confirmar)
     confirm: (title, message, onConfirm) => {
       const titleEl = byId("sys-title");
       const msgEl = byId("sys-msg");
@@ -72,15 +66,12 @@
 
       if (actions) {
         actions.innerHTML = "";
-
-        // Botão Cancelar (Cinza)
         const btnCancel = document.createElement("button");
         btnCancel.className = "button";
         btnCancel.style.flex = "1";
         btnCancel.innerHTML = `<span class="shadow"></span><span class="edge"></span><div class="front" style="background:#777"><span>NÃO</span></div>`;
         btnCancel.onclick = () => modal.classList.remove("show");
 
-        // Botão Confirmar (Amarelo)
         const btnConfirm = document.createElement("button");
         btnConfirm.className = "button";
         btnConfirm.style.flex = "1";
@@ -93,14 +84,13 @@
         actions.appendChild(btnCancel);
         actions.appendChild(btnConfirm);
       }
-
       if (modal) modal.classList.add("show");
     },
   };
 
-  /* ------------------------------------------------------------------------ */
-  /* Storage (LocalStorage Wrapper)                                           */
-  /* ------------------------------------------------------------------------ */
+  /* ========================================================================== */
+  /* Storage (LocalStorage)                                                     */
+  /* ========================================================================== */
   const store = {
     get(key) {
       return window.localStorage.getItem(APP_NS + key);
@@ -116,28 +106,22 @@
     },
   };
 
-  /* ------------------------------------------------------------------------ */
-  /* Image Processing Logic                                                   */
-  /* ------------------------------------------------------------------------ */
-
+  /* ========================================================================== */
+  /* Image Processing                                                           */
+  /* ========================================================================== */
   function base64DataURLToArrayBuffer(dataURL) {
     const base64Regex = /^data:image\/\w+;base64,/;
     if (!dataURL || !base64Regex.test(dataURL)) return null;
-
     const stringBase64 = dataURL.replace(base64Regex, "");
     const binaryString = window.atob(stringBase64);
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
-
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
     return bytes.buffer;
   }
 
   function addImage(base64, width, height) {
-    if (imageDimensionsCache[base64]) return; // Avoid duplicates
-
+    if (imageDimensionsCache[base64]) return;
     attachedImages.push({ src: base64, w: width, h: height });
     imageDimensionsCache[base64] = { w: width, h: height };
     renderGallery();
@@ -148,9 +132,8 @@
     reader.onload = (evt) => {
       const base64 = evt.target.result;
       const imgTemp = new Image();
-      imgTemp.onload = () => {
+      imgTemp.onload = () =>
         addImage(base64, imgTemp.naturalWidth, imgTemp.naturalHeight);
-      };
       imgTemp.src = base64;
     };
     reader.readAsDataURL(blob);
@@ -159,8 +142,6 @@
   function renderGallery() {
     const container = byId("paste-area");
     if (!container) return;
-
-    // Reset container
     const existingGallery = container.querySelector(".img-preview-container");
     if (existingGallery) existingGallery.remove();
 
@@ -173,48 +154,39 @@
       attachedImages.forEach((item, index) => {
         const wrap = document.createElement("div");
         wrap.style.cssText = "position: relative; animation: fadeIn 0.3s ease;";
-
         const img = document.createElement("img");
         img.src = item.src;
         img.style.cssText =
           "height: 100px; border-radius: 4px; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); object-fit: cover;";
-
         const btnRemove = document.createElement("button");
         btnRemove.innerText = "X";
         btnRemove.style.cssText =
           "position: absolute; top: -8px; right: -8px; background: red; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3);";
-
         btnRemove.onclick = (e) => {
           e.stopPropagation();
           delete imageDimensionsCache[item.src];
           attachedImages.splice(index, 1);
           renderGallery();
         };
-
         wrap.appendChild(img);
         wrap.appendChild(btnRemove);
         gallery.appendChild(wrap);
       });
-
       container.appendChild(gallery);
     }
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Drag & Drop and Clipboard Handling                                       */
-  /* ------------------------------------------------------------------------ */
-
+  /* ========================================================================== */
+  /* Clipboard & DragAndDrop                                                    */
+  /* ========================================================================== */
   async function handlePasteFromClipboard() {
     const container = byId("paste-area");
     const textP = container.querySelector("p");
     const originalText = textP.innerHTML;
-
     try {
       container.classList.add("loading");
       textP.innerHTML = "Lendo área de transferência...";
-
       const clipboardItems = await navigator.clipboard.read();
-
       let found = false;
       for (const item of clipboardItems) {
         const imageTypes = item.types.filter((type) =>
@@ -226,15 +198,13 @@
           found = true;
         }
       }
-
-      if (!found) {
+      if (!found)
         ui.alert(
           "Aviso",
           "Nenhuma imagem encontrada na área de transferência.",
         );
-      }
     } catch (err) {
-      console.error("Clipboard access error:", err);
+      console.error("Clipboard error:", err);
     } finally {
       container.classList.remove("loading");
       textP.innerHTML = originalText;
@@ -243,14 +213,15 @@
 
   function wireDragAndDrop(area) {
     ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
-      area.addEventListener(eventName, preventDefaults, false);
+      area.addEventListener(
+        eventName,
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        },
+        false,
+      );
     });
-
-    function preventDefaults(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
     ["dragenter", "dragover"].forEach((eventName) => {
       area.addEventListener(
         eventName,
@@ -258,7 +229,6 @@
         false,
       );
     });
-
     ["dragleave", "drop"].forEach((eventName) => {
       area.addEventListener(
         eventName,
@@ -266,19 +236,13 @@
         false,
       );
     });
-
     area.addEventListener(
       "drop",
       (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-
+        const files = e.dataTransfer.files;
         if (files && files.length > 0) {
           for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            if (file.type.startsWith("image/")) {
-              processImageFile(file);
-            }
+            if (files[i].type.startsWith("image/")) processImageFile(files[i]);
           }
         }
       },
@@ -286,9 +250,9 @@
     );
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Polyfills                                                                */
-  /* ------------------------------------------------------------------------ */
+  /* ========================================================================== */
+  /* Polyfills & Helpers                                                        */
+  /* ========================================================================== */
   if (
     typeof SVGElement !== "undefined" &&
     !SVGElement.prototype.hasOwnProperty("namespaceURI")
@@ -299,9 +263,34 @@
     });
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Persistence & Validation                                                 */
-  /* ------------------------------------------------------------------------ */
+  function formatPtBrDate(ymd) {
+    if (!ymd) return "";
+    const [y, m, d] = ymd.split("-");
+    return new Date(y, m - 1, d).toLocaleDateString("pt-BR");
+  }
+
+  function getYearSuffix(ymd) {
+    return ymd ? ymd.split("-")[0] : "2026";
+  }
+
+  function extractCoordinates(text) {
+    const regex = /-?\d+\.\d+/g;
+    const matches = text.match(regex);
+    if (!matches || matches.length < 2) return null;
+    let lat = parseFloat(matches[0]);
+    let lng = parseFloat(matches[1]);
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      if (matches[1] >= -90 && matches[1] <= 90) {
+        lat = parseFloat(matches[1]);
+        lng = parseFloat(matches[0]);
+      } else return null;
+    }
+    return { lat, lng };
+  }
+
+  /* ========================================================================== */
+  /* Persistence & Validation                                                   */
+  /* ========================================================================== */
   function restoreField(el) {
     if (!el.id) return;
     const val = store.get(el.id);
@@ -378,7 +367,6 @@
           validators[type](el);
         });
     });
-
     ["ocorrencia", "date", "logradouro", "bairro", "cco", "matricula"].forEach(
       (id) => {
         const el = byId(id);
@@ -391,16 +379,6 @@
     );
   }
 
-  function formatPtBrDate(ymd) {
-    if (!ymd) return "";
-    const [y, m, d] = ymd.split("-");
-    return new Date(y, m - 1, d).toLocaleDateString("pt-BR");
-  }
-
-  function getYearSuffix(ymd) {
-    return ymd ? ymd.split("-")[0] : "2026";
-  }
-
   function wireBoxes() {
     const map = {
       coletivo: "box-coletivo",
@@ -411,10 +389,8 @@
     const update = () =>
       Object.entries(map).forEach(([inp, out]) => {
         if (byId(inp) && byId(out))
-          byId(out).innerHTML = `<span class="label">${byId(out).id.replace(
-            "box-",
-            "",
-          )}:</span> ${byId(inp).value}`;
+          byId(out).innerHTML =
+            `<span class="label">${byId(out).id.replace("box-", "")}:</span> ${byId(inp).value}`;
       });
     Object.keys(map).forEach((id) =>
       byId(id)?.addEventListener("input", update),
@@ -440,15 +416,12 @@
     byId("excel")?.classList.add("hidden");
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Generate Word & PDF Logic                                                */
-  /* ------------------------------------------------------------------------ */
-
+  /* ========================================================================== */
+  /* Document Generation (Word/PDF)                                             */
+  /* ========================================================================== */
   async function prepareDocument() {
     try {
       const getVal = (id) => (byId(id)?.value || "").toUpperCase().trim();
-
-      // Mandatory fields
       const inputs = {
         nOc: getVal("nOc"),
         ocorrencia: getVal("ocorrencia"),
@@ -468,7 +441,6 @@
         matricula: getVal("matricula"),
       };
 
-      // Optional fields defaulting to "NÃO HOUVE"
       const extras = [
         "victimName",
         "victimDocumentation",
@@ -498,11 +470,9 @@
         "matriculaOp",
         "moto",
       ];
-
       const extraData = {};
       extras.forEach((f) => (extraData[f] = getVal(f) || "NÃO HOUVE"));
 
-      // ---------------- VALIDAÇÃO ATUALIZADA ----------------
       const check = (val, msg) => {
         if (!val) {
           ui.alert("Campo Obrigatório", msg);
@@ -511,107 +481,57 @@
         return true;
       };
 
-      if (
-        !check(
-          inputs.nOc,
-          "Por favor, preencha o <strong>Número da OC</strong>.",
-        )
-      )
+      if (!check(inputs.nOc, "Preencha o <strong>Número da OC</strong>."))
         return;
-      if (
-        !check(
-          inputs.ocorrencia,
-          "Preencha a descrição da <strong>Ocorrência</strong>.",
-        )
-      )
+      if (!check(inputs.ocorrencia, "Preencha a <strong>Ocorrência</strong>."))
         return;
-      if (
-        !check(
-          inputs.coletivo,
-          "Preencha o número do <strong>Coletivo</strong>.",
-        )
-      )
+      if (!check(inputs.coletivo, "Preencha o <strong>Coletivo</strong>."))
         return;
       if (!check(inputs.linha, "Preencha a <strong>Linha</strong>.")) return;
       if (!check(inputs.dateRaw, "Selecione uma <strong>Data</strong>."))
         return;
       if (!check(inputs.time, "Preencha a <strong>Hora</strong>.")) return;
-
-      if (
-        !check(
-          inputs.logradouro,
-          "Preencha o <strong>Logradouro</strong> (Endereço).",
-        )
-      )
+      if (!check(inputs.logradouro, "Preencha o <strong>Endereço</strong>."))
         return;
-      if (!check(inputs.numero, "Preencha o <strong>Número</strong> (ou S/N)."))
-        return;
+      if (!check(inputs.numero, "Preencha o <strong>Número</strong>.")) return;
       if (!check(inputs.bairro, "Preencha o <strong>Bairro</strong>.")) return;
-
+      if (!check(inputs.driverName, "Preencha o <strong>Motorista</strong>."))
+        return;
+      if (!check(inputs.driverCpf, "Preencha o <strong>CPF</strong>.")) return;
       if (
-        !check(
-          inputs.driverName,
-          "Preencha o <strong>Nome do Motorista</strong>.",
-        )
+        !check(inputs.driverSituation, "Preencha a <strong>Situação</strong>.")
       )
         return;
       if (
-        !check(
-          inputs.driverCpf,
-          "Preencha o <strong>CPF do Motorista</strong>.",
-        )
-      )
-        return;
-      if (
-        !check(
-          inputs.driverSituation,
-          "Preencha a <strong>Situação do Motorista</strong>.",
-        )
-      )
-        return;
-
-      if (
-        !check(
-          inputs.inicioFato,
-          "Preencha a descrição do <strong>Início do Fato</strong>.",
-        )
+        !check(inputs.inicioFato, "Preencha o <strong>Início do Fato</strong>.")
       )
         return;
       if (!check(inputs.desfecho, "Preencha o <strong>Desfecho</strong>."))
         return;
-
-      if (!check(inputs.cco, "Preencha o <strong>CCO</strong> responsável."))
-        return;
+      if (!check(inputs.cco, "Preencha o <strong>CCO</strong>.")) return;
       if (!check(inputs.matricula, "Preencha a <strong>Matrícula</strong>."))
         return;
-      // -----------------------------------------------------
 
       const dateFmt = formatPtBrDate(inputs.dateRaw);
       const year = getYearSuffix(inputs.dateRaw);
 
-      // Image sizing logic (Bounding Box)
       const imageOpts = {
         centered: false,
         getImage: (tagValue) =>
           base64DataURLToArrayBuffer(tagValue) || new ArrayBuffer(0),
-
         getSize: function (img, tagValue) {
           const dims = imageDimensionsCache[tagValue];
           if (!dims) return [500, 300];
-
           let { w, h } = dims;
-
-          // Resize down if width exceeds limit
           if (w > MAX_DOC_WIDTH) {
-            const ratio = MAX_DOC_WIDTH / w;
+            const r = MAX_DOC_WIDTH / w;
             w = MAX_DOC_WIDTH;
-            h = h * ratio;
+            h = h * r;
           }
-          // Resize down if height exceeds limit (checking aspect ratio integrity)
           if (h > MAX_DOC_HEIGHT) {
-            const ratio = MAX_DOC_HEIGHT / h;
+            const r = MAX_DOC_HEIGHT / h;
             h = MAX_DOC_HEIGHT;
-            w = w * ratio;
+            w = w * r;
           }
           return [w, h];
         },
@@ -628,12 +548,8 @@
         modules: imageModule ? [imageModule] : [],
       });
 
-      const fotosData =
-        attachedImages.length > 0
-          ? attachedImages.map((img) => ({ imagem: img.src }))
-          : [];
+      const fotosData = attachedImages.map((img) => ({ imagem: img.src }));
 
-      // Render Data
       doc.setData({
         ...inputs,
         ...extraData,
@@ -644,21 +560,13 @@
 
       doc.render();
 
-      // Gera o Blob na Memória (Global)
       currentDocBlob = doc.getZip().generate({
         type: "blob",
         mimeType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
+      currentFileName = `${inputs.nOc} - ${dateFmt.replace(/\//g, ".").slice(0, 5)} - ${inputs.linha} - ${inputs.coletivo} - ${inputs.ocorrencia} - ${inputs.logradouro}`;
 
-      // Define o Nome do Arquivo (Global)
-      currentFileName = `${inputs.nOc} - ${dateFmt
-        .replace(/\//g, ".")
-        .slice(0, 5)} - ${inputs.linha} - ${inputs.coletivo} - ${
-        inputs.ocorrencia
-      } - ${inputs.logradouro}`;
-
-      // Update Excel preview
       setText("td-nOc", `${inputs.nOc}/${year}`);
       setText("td-date", dateFmt);
       setText("td-alerta", extraData.alerta);
@@ -678,8 +586,6 @@
       setText("td-fechamento", inputs.cco);
 
       byId("excel")?.classList.remove("hidden");
-
-      // ABRE O MODAL DE ESCOLHA
       byId("modal-format").classList.add("show");
     } catch (err) {
       console.error(err);
@@ -690,7 +596,6 @@
     }
   }
 
-  // Helper para download local
   function downloadBlob(blob, name) {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -698,103 +603,240 @@
     link.click();
   }
 
-  // Função que chama a API do Vercel (Adobe)
   async function generateAndDownloadPDF() {
     const msg = byId("pdf-loading-msg");
     if (msg) msg.style.display = "block";
-
     try {
-      // Envia o blob do Word para nossa API
       const response = await fetch("/api/convert-pdf", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/octet-stream",
-        },
+        headers: { "Content-Type": "application/octet-stream" },
         body: currentDocBlob,
       });
-
-      // --- CORREÇÃO AQUI: Ler o erro real do servidor ---
-      if (!response.ok) {
-        let errorDetails = "Erro desconhecido";
-        try {
-          // Tenta ler o JSON que nosso backend enviou
-          const errJson = await response.json();
-          // Pega a mensagem de erro ou os detalhes técnicos
-          errorDetails = errJson.error || JSON.stringify(errJson);
-        } catch (readErr) {
-          // Se não for JSON (ex: erro 404 HTML ou 504 Gateway Timeout)
-          errorDetails = `Status ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorDetails);
-      }
-      // --------------------------------------------------
-
+      if (!response.ok)
+        throw new Error(`Status ${response.status}: ${response.statusText}`);
       const pdfBlob = await response.blob();
       downloadBlob(pdfBlob, currentFileName + ".pdf");
     } catch (e) {
-      // O alerta agora mostrará a mensagem técnica exata (ex: "Module not found")
-      ui.alert("Erro Adobe PDF", "Detalhes do erro:\n" + e.message);
+      ui.alert("Erro PDF", e.message);
     } finally {
       if (msg) msg.style.display = "none";
-      byId("modal-format").classList.remove("show"); // Fecha modal
+      byId("modal-format").classList.remove("show");
     }
   }
 
-  /* ------------------------------------------------------------------------ */
-  /* Event Wiring & Actions                                                   */
-  /* ------------------------------------------------------------------------ */
+  /* ========================================================================== */
+  /* Event Listeners & Actions                                                  */
+  /* ========================================================================== */
   function wireActions() {
-    // Botão Limpar com UI Confirm
     byId("clear")?.addEventListener("click", (e) => {
       e.preventDefault();
-      ui.confirm(
-        "Limpar Formulário",
-        "Tem certeza que deseja apagar todos os campos?\nEssa ação não pode ser desfeita.",
-        () => {
-          clearAll();
-        },
-      );
+      ui.confirm("Limpar Formulário", "Deseja apagar tudo?", () => clearAll());
     });
 
-    // Gera Word (Abre modal de escolha)
     byId("generateWord")?.addEventListener("click", prepareDocument);
 
-    // Modal Formato - Apenas Word
     byId("btn-word-only")?.addEventListener("click", () => {
-      if (currentDocBlob) {
+      if (currentDocBlob)
         downloadBlob(currentDocBlob, currentFileName + ".docx");
-      }
       byId("modal-format").classList.remove("show");
     });
 
-    // Modal Formato - Word + PDF
     byId("btn-word-pdf")?.addEventListener("click", () => {
       if (currentDocBlob) {
-        // Baixa o Word primeiro (garantia)
         downloadBlob(currentDocBlob, currentFileName + ".docx");
-        // Depois tenta o PDF
         generateAndDownloadPDF();
       }
     });
 
-    // Fechamento genérico de modais ao clicar fora
     window.addEventListener("click", (e) => {
-      if (e.target.classList.contains("modal")) {
+      if (e.target.classList.contains("modal"))
         e.target.classList.remove("show");
-      }
     });
 
-    // Botão Copiar Linha
     byId("copy")?.addEventListener("click", () => {
       const row = $("#excel tbody tr");
       if (row)
         navigator.clipboard
           .writeText(row.innerText)
-          .then(() =>
-            ui.alert("Sucesso", "Linha copiada para a área de transferência!"),
-          );
+          .then(() => ui.alert("Sucesso", "Copiado!"));
     });
 
+    // --- Modal Coordenadas ---
+    const modalCoords = byId("modal-coords");
+    const btnOpenCoords = byId("btn-open-coords");
+    const btnCancelCoords = byId("btn-coords-cancel");
+    const btnApplyCoords = byId("btn-coords-apply");
+    const inputCoords = byId("coords-input");
+
+    if (btnOpenCoords) {
+      btnOpenCoords.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (inputCoords) inputCoords.value = "";
+        if (modalCoords) {
+          modalCoords.classList.add("show");
+          setTimeout(() => inputCoords && inputCoords.focus(), 100);
+        }
+      });
+    }
+
+    if (btnCancelCoords) {
+      btnCancelCoords.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (modalCoords) modalCoords.classList.remove("show");
+      });
+    }
+
+    /* ---------------------------------------------------------------------- */
+    /* Geocoding Logic (Updated with Map Modal)                               */
+    /* ---------------------------------------------------------------------- */
+    if (btnApplyCoords) {
+      btnApplyCoords.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const text = inputCoords ? inputCoords.value : "";
+        const coords = extractCoordinates(text);
+
+        if (coords) {
+          if (modalCoords) modalCoords.classList.remove("show");
+
+          const logradouroInput = byId("logradouro");
+          const numeroInput = byId("numero");
+          const bairroInput = byId("bairro");
+
+          // Feedback visual
+          logradouroInput.value = "BUSCANDO...";
+          logradouroInput.setAttribute("readonly", true);
+
+          try {
+            const response = await fetch("/api/geocode", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(coords),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Erro na API");
+
+            // Extração
+            let street = "",
+              number = "",
+              neighborhood = "",
+              sublocality = "",
+              adm_area = "";
+            if (data.components) {
+              data.components.forEach((c) => {
+                if (c.types.includes("route")) street = c.long_name;
+                if (c.types.includes("street_number")) number = c.long_name;
+                if (c.types.includes("neighborhood"))
+                  neighborhood = c.long_name;
+                if (
+                  c.types.includes("sublocality") ||
+                  c.types.includes("sublocality_level_1")
+                )
+                  sublocality = c.long_name;
+                if (c.types.includes("administrative_area_level_2"))
+                  adm_area = c.long_name;
+              });
+            }
+
+            // Define os valores finais (mas NÃO preenche os campos ainda)
+            let finalStreet = "";
+            if (street) finalStreet = street.toUpperCase();
+            else {
+              let clean = data.address.split(" - ")[0];
+              if (clean.includes(",")) clean = clean.split(",")[0];
+              finalStreet = clean.toUpperCase();
+            }
+
+            let finalNumber = number || "";
+
+            let finalBairro = "";
+            if (neighborhood) finalBairro = neighborhood.toUpperCase();
+            else if (sublocality) finalBairro = sublocality.toUpperCase();
+            else if (adm_area) finalBairro = adm_area.toUpperCase();
+
+            // Limpa o estado de "carregando"
+            logradouroInput.value = "";
+            logradouroInput.removeAttribute("readonly");
+
+            // --- Lógica do Modal de Mapa ---
+            const displayAddress = `${finalStreet}, ${finalNumber || "S/N"} - ${finalBairro}`;
+            const mapText = byId("map-address-text");
+            const mapFrame = byId("google-map-frame");
+            const modalMap = byId("modal-map");
+
+            // Referências aos botões do Modal de Mapa
+            const btnConfirmMap = byId("btn-confirm-map");
+            const btnMapBack = byId("btn-map-back");
+
+            if (mapText) mapText.textContent = displayAddress;
+
+            // Usa URL de Embed padrão (sem chave exposta, zoom 19, mapa normal)
+            if (mapFrame) {
+              mapFrame.src = `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=19&output=embed`;
+            }
+
+            if (modalMap) modalMap.classList.add("show");
+
+            // Helper para limpar erros visualmente
+            const forceClearError = (input, errorId) => {
+              if (input) {
+                input.classList.remove("invalid");
+                input.classList.add("valid");
+              }
+              const err = byId(errorId);
+              if (err) err.style.display = "none";
+            };
+
+            // Lógica do Botão VOLTAR (Reabre o modal de coordenadas)
+            if (btnMapBack) {
+              const newBack = btnMapBack.cloneNode(true);
+              btnMapBack.parentNode.replaceChild(newBack, btnMapBack);
+              newBack.addEventListener("click", () => {
+                modalMap.classList.remove("show");
+                if (modalCoords) modalCoords.classList.add("show");
+              });
+            }
+
+            // Lógica do Botão CONFIRMAR (Preenche os campos e fecha)
+            if (btnConfirmMap) {
+              const newBtn = btnConfirmMap.cloneNode(true);
+              btnConfirmMap.parentNode.replaceChild(newBtn, btnConfirmMap);
+              newBtn.addEventListener("click", () => {
+                // Preenche
+                logradouroInput.value = finalStreet;
+                numeroInput.value = finalNumber;
+                bairroInput.value = finalBairro;
+
+                // Salva e valida
+                logradouroInput.dispatchEvent(new Event("input"));
+                numeroInput.dispatchEvent(new Event("input"));
+                bairroInput.dispatchEvent(new Event("input"));
+
+                // Força a limpeza visual de erros (caso o validador não pegue imediatamente)
+                forceClearError(logradouroInput, "logradouroError");
+                forceClearError(numeroInput, "numeroError");
+                forceClearError(bairroInput, "bairroError");
+
+                if (modalMap) modalMap.classList.remove("show");
+                ui.alert("Sucesso", "Endereço confirmado e preenchido.");
+              });
+            }
+          } catch (err) {
+            console.error(err);
+            logradouroInput.value = `GPS: ${coords.lat}, ${coords.lng}`;
+            logradouroInput.removeAttribute("readonly");
+            logradouroInput.dispatchEvent(new Event("input"));
+            ui.alert(
+              "Aviso",
+              "Google não retornou endereço completo. Usando GPS.",
+            );
+          }
+        } else {
+          ui.alert("Erro", "Coordenadas inválidas.");
+        }
+      });
+    }
+
+    // --- Outros Listeners (Paste Area, Notes, Quick Options) ---
     const pasteArea = byId("paste-area");
     if (pasteArea) {
       pasteArea.addEventListener("click", handlePasteFromClipboard);
@@ -803,9 +845,8 @@
         e.preventDefault();
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let item of items) {
-          if (item.kind === "file" && item.type.includes("image/")) {
+          if (item.kind === "file" && item.type.includes("image/"))
             processImageFile(item.getAsFile());
-          }
         }
       });
     }
@@ -814,14 +855,12 @@
       byId("modal").classList.add("show"),
     );
 
-    // Lógica do Painel Lateral (Opções de Preenchimento Rápido)
     const optBtn = byId("opt-apply-a");
     if (optBtn)
       optBtn.addEventListener("click", () => {
         const sel = byId("opt-action-a");
         const val = sel?.value;
         if (!val || val === "clear-all") return;
-
         const setV = (id, v) => {
           const el = byId(id);
           if (el) {
@@ -829,10 +868,8 @@
             el.dispatchEvent(new Event("input"));
           }
         };
-
         clearAll();
         sel.value = val;
-
         if (val === "avaria-coletivo") {
           setV("ocorrencia", "AVARIA NO COLETIVO");
           setV("logradouro", "GARAGEM UNIÃO");
@@ -858,17 +895,15 @@
       });
 
     /* ========================================================================== */
-    /* Lógica de E-mail                                                           */
+    /* E-mails & Spreadsheet                                                      */
     /* ========================================================================== */
-
     const RAW_EMAILS = {
       cc: "reinaldooperacional@wolffsp.com,robertooperacional@wolffsp.com,celsooperacional@wolffsp.com,yvanoperacional@wolffsp.com",
-      base: "mauricio.oliveira@wolffsp.com,sinistro@wolffsp.com,beatrizsinistro@wolffsp.com,gustavosinistro@wolffsp.com,maianesinistro@wolffsp.com",
+      base: "danilo.silva@wolffsp.com,sinistro@wolffsp.com,beatrizsinistro@wolffsp.com,gustavosinistro@wolffsp.com,maianesinistro@wolffsp.com",
       funilaria: "funilariad10@wolffsp.com",
       treinamento: "treinamento1@wolffsp.com",
       estoque: "estoquepecasd10@wolffsp.com",
     };
-
     const SCENARIOS = {
       "sem-danos": RAW_EMAILS.base,
       "com-danos": `${RAW_EMAILS.base},${RAW_EMAILS.funilaria}`,
@@ -877,75 +912,44 @@
       furto: `${RAW_EMAILS.base},${RAW_EMAILS.treinamento},${RAW_EMAILS.funilaria},${RAW_EMAILS.estoque}`,
     };
 
-    // Função auxiliar para gerar o Assunto
     function getFormattedSubject() {
       const getVal = (id) =>
         (document.getElementById(id)?.value || "").toUpperCase().trim();
-
-      const nOc = getVal("nOc");
-      const linha = getVal("linha");
-      const coletivo = getVal("coletivo");
-      const ocorrencia = getVal("ocorrencia");
-      const logradouro = getVal("logradouro");
       const dateRaw = document.getElementById("date")?.value || "";
-
       const dateFmt = formatPtBrDate(dateRaw);
       const dateSubject = dateFmt
         ? dateFmt.replace(/\//g, ".").slice(0, 5)
         : "";
-
-      return `${nOc} - ${dateSubject} - ${linha} - ${coletivo} - ${ocorrencia} - ${logradouro}`;
+      return `${getVal("nOc")} - ${dateSubject} - ${getVal("linha")} - ${getVal("coletivo")} - ${getVal("ocorrencia")} - ${getVal("logradouro")}`;
     }
 
-    // Listeners dos botões de e-mail
-    const emailButtons = document.querySelectorAll(".email-trigger");
-    emailButtons.forEach((btn) => {
+    document.querySelectorAll(".email-trigger").forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        const targetBtn = e.target.closest(".email-trigger");
-        const type = targetBtn.getAttribute("data-type");
-
-        const to = SCENARIOS[type];
-        const cc = RAW_EMAILS.cc;
-        const rawSubject = getFormattedSubject();
-        const subject = encodeURIComponent(rawSubject);
-        const body = "";
-
-        const url = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${to}&cc=${cc}&su=${subject}&body=${body}`;
+        const type = e.target
+          .closest(".email-trigger")
+          .getAttribute("data-type");
+        const url = `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${SCENARIOS[type]}&cc=${RAW_EMAILS.cc}&su=${encodeURIComponent(getFormattedSubject())}&body=${encodeURIComponent("Prezados,\n\nSegue em anexo a ocorrência.\n\nAtt. __________")}`;
         window.open(url, "_blank");
       });
     });
-
-    /* ========================================================================== */
-    /* Lógica da Planilha                                                         */
-    /* ========================================================================== */
 
     const SHEET_CONFIG = {
       id: "1OcIUjqUdEszN1z0GqoqUoFJaDHdriiprTfgG61wApog",
       gid: "666841944",
     };
-
-    function openSpreadsheetRow() {
-      const nOcInput = document.getElementById("nOc");
-      const rawValue = nOcInput?.value || "";
-
-      const numberPart = rawValue.toUpperCase().replace("6A", "");
-      const ocNumber = parseInt(numberPart, 10);
-
-      if (isNaN(ocNumber)) {
-        ui.alert("Erro", "Número da OC inválido para cálculo da linha.");
-        return;
-      }
-
-      const targetRow = ocNumber + 2;
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.id}/edit#gid=${SHEET_CONFIG.gid}&range=B${targetRow}`;
-
-      window.open(url, "_blank");
-    }
-
-    // Ligar o botão
     document.getElementById("openSheet")?.addEventListener("click", (e) => {
       e.preventDefault();
-      openSpreadsheetRow();
+      const nOcInput = document.getElementById("nOc");
+      const rawValue = nOcInput?.value || "";
+      const ocNumber = parseInt(rawValue.toUpperCase().replace("6A", ""), 10);
+      if (isNaN(ocNumber)) {
+        ui.alert("Erro", "Número da OC inválido.");
+        return;
+      }
+      window.open(
+        `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.id}/edit#gid=${SHEET_CONFIG.gid}&range=B${ocNumber + 2}`,
+        "_blank",
+      );
     });
   }
 
@@ -958,3 +962,4 @@
 
   document.addEventListener("DOMContentLoaded", init);
 })();
+
