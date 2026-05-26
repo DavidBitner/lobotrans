@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "/manutencao.jpg",
+      "permanent": false
+    }
+  ]
+}
