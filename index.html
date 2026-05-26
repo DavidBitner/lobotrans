@@ -1,265 +1,287 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>lobotrans</title>
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>lobotrans</title>
+    <!-- Tab icon -->
+    <link rel="icon" href="./background.jpg" type="image/png" />
 
-  <!-- Tab icon -->
-  <link rel="icon" href="./background.jpg" type="image/png">
+    <!-- Preload background for faster paint -->
+    <link rel="preload" as="image" href="./background.jpg" />
 
-  <!-- Preload background for faster paint -->
-  <link rel="preload" as="image" href="./background.jpg">
-
-  <style>
-    /* reset to avoid stray scrollbars from UA defaults */
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      height: 100%;
-    }
-
-    .hub {
-      --bg: #000;
-      --ring: rgba(255, 255, 255, .08);
-      --text: #f2f2f2;
-      --accent: #FBB91A;
-
-      /* motion */
-      --t-hover: 360ms;
-      --t-shadow: 440ms;
-      --t-press-in: 140ms;
-      --ease-out: cubic-bezier(.2, .7, .1, 1);
-      --ease-in: cubic-bezier(.4, 0, .6, 1);
-
-      margin: 0;
-      height: 100svh;
-      /* exact viewport height */
-      width: 100vw;
-      /* exact viewport width */
-      overflow: hidden;
-      /* prevent any scroll */
-      padding: 0;
-      display: grid;
-      place-items: center;
-      position: relative;
-      /* enables ::before/::after layering */
-      background: var(--bg);
-      /* base; image handled by ::before */
-      color: var(--text);
-      font-family: Calibri, sans-serif;
-    }
-
-    /* Blurred background image */
-    .hub::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: -2;
-      background: url("./background.jpg") center / cover no-repeat;
-      filter: blur(10px);
-      transform: scale(1.06);
-      /* avoid blur-edge clipping */
-      pointer-events: none;
-    }
-
-    /* Dark overlay + keep radial accents */
-    .hub::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      background:
-        radial-gradient(80rem 80rem at 10% -20%, rgba(251, 185, 26, .08), transparent 60%),
-        radial-gradient(70rem 70rem at 110% 120%, rgba(240, 200, 108, .05), transparent 60%),
-        linear-gradient(rgba(0, 0, 0, .96), rgba(0, 0, 0, .96));
-    }
-
-    .grid {
-      width: min(1000px, 100%);
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(3, minmax(220px, 1fr));
-      place-items: stretch;
-      /* grid children sizing */
-      justify-items: stretch;
-    }
-
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
+    <style>
+      /* reset to avoid stray scrollbars from UA defaults */
+      * {
+        box-sizing: border-box;
       }
-    }
 
-    @media (max-width: 560px) {
-      .grid {
-        grid-template-columns: 1fr;
+      html,
+      body {
+        height: 100%;
       }
-    }
 
-    .card {
-      position: relative;
-      display: grid;
-      place-items: center;
-      text-decoration: none;
-      color: var(--text);
-      background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, .00));
-      border-radius: 16px;
-      height: 150px;
-      box-shadow:
-        inset 0 0 0 1px var(--ring),
-        0 6px 28px rgba(0, 0, 0, .45);
-      isolation: isolate;
-      overflow: hidden;
-      outline: 0;
-      transition:
-        transform var(--t-hover) var(--ease-out),
-        box-shadow var(--t-shadow) var(--ease-out),
-        filter var(--t-hover) var(--ease-out);
-      will-change: transform, box-shadow;
-    }
+      .hub {
+        --bg: #000;
+        --ring: rgba(255, 255, 255, 0.08);
+        --text: #f2f2f2;
+        --accent: #fbb91a;
 
-    .card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 16px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity var(--t-hover) var(--ease-out);
-      background: linear-gradient(135deg,
-          rgba(251, 185, 26, .00),
-          rgba(251, 185, 26, .16),
-          rgba(240, 200, 108, .00));
-      mix-blend-mode: plus-lighter;
-    }
+        /* motion */
+        --t-hover: 360ms;
+        --t-shadow: 440ms;
+        --t-press-in: 140ms;
+        --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+        --ease-in: cubic-bezier(0.4, 0, 0.6, 1);
 
-    .card h2 {
-      margin: 0;
-      font-size: clamp(18px, 2.4vw, 22px);
-      font-weight: 800;
-      letter-spacing: .6px;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-shadow: 0 0 12px rgba(251, 185, 26, .15);
-      transition: transform var(--t-hover) var(--ease-out), opacity var(--t-hover) var(--ease-out);
-    }
+        margin: 0;
+        height: 100svh;
+        /* exact viewport height */
+        width: 100vw;
+        /* exact viewport width */
+        overflow: hidden;
+        /* prevent any scroll */
+        padding: 0;
+        display: grid;
+        place-items: center;
+        position: relative;
+        /* enables ::before/::after layering */
+        background: var(--bg);
+        /* base; image handled by ::before */
+        color: var(--text);
+        font-family: Calibri, sans-serif;
+      }
 
-    .card:hover,
-    .card:focus-visible {
-      transform: translateY(-4px);
-      box-shadow:
-        inset 0 0 0 1px var(--ring),
-        0 12px 38px rgba(0, 0, 0, .56);
-    }
+      /* Blurred background image */
+      .hub::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background: url("./background.jpg") center / cover no-repeat;
+        filter: blur(10px);
+        transform: scale(1.06);
+        /* avoid blur-edge clipping */
+        pointer-events: none;
+      }
 
-    .card:hover::after,
-    .card:focus-visible::after {
-      opacity: 1;
-    }
+      /* Dark overlay + keep radial accents */
+      .hub::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            80rem 80rem at 10% -20%,
+            rgba(251, 185, 26, 0.08),
+            transparent 60%
+          ),
+          radial-gradient(
+            70rem 70rem at 110% 120%,
+            rgba(240, 200, 108, 0.05),
+            transparent 60%
+          ),
+          linear-gradient(rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.96));
+      }
 
-    .card:hover h2,
-    .card:focus-visible h2 {
-      transform: translateY(-1px);
-    }
+      .grid {
+        width: min(1000px, 100%);
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(3, minmax(220px, 1fr));
+        place-items: stretch;
+        /* grid children sizing */
+        justify-items: stretch;
+      }
 
-    .card:active {
-      transition-duration: var(--t-press-in);
-      transition-timing-function: var(--ease-in);
-      transform: translateY(-1px) scale(.992);
-      box-shadow:
-        inset 0 0 0 1px var(--ring),
-        0 8px 30px rgba(0, 0, 0, .5);
-    }
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
 
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      pointer-events: none;
-      transform: translate(-50%, -50%) scale(0);
-      background: radial-gradient(circle,
-          rgba(251, 185, 26, .35) 0%,
-          rgba(251, 185, 26, .22) 40%,
-          rgba(251, 185, 26, 0) 70%);
-      opacity: 0;
-    }
+      @media (max-width: 560px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    .ripple.is-animating {
-      animation: ripple-kf 720ms var(--ease-out) forwards;
-    }
+      .card {
+        position: relative;
+        display: grid;
+        place-items: center;
+        text-decoration: none;
+        color: var(--text);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0)
+        );
+        border-radius: 16px;
+        height: 150px;
+        box-shadow:
+          inset 0 0 0 1px var(--ring),
+          0 6px 28px rgba(0, 0, 0, 0.45);
+        isolation: isolate;
+        overflow: hidden;
+        outline: 0;
+        transition:
+          transform var(--t-hover) var(--ease-out),
+          box-shadow var(--t-shadow) var(--ease-out),
+          filter var(--t-hover) var(--ease-out);
+        will-change: transform, box-shadow;
+      }
 
-    @keyframes ripple-kf {
-      0% {
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--t-hover) var(--ease-out);
+        background: linear-gradient(
+          135deg,
+          rgba(251, 185, 26, 0),
+          rgba(251, 185, 26, 0.16),
+          rgba(240, 200, 108, 0)
+        );
+        mix-blend-mode: plus-lighter;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: clamp(18px, 2.4vw, 22px);
+        font-weight: 800;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--accent);
+        text-shadow: 0 0 12px rgba(251, 185, 26, 0.15);
+        transition:
+          transform var(--t-hover) var(--ease-out),
+          opacity var(--t-hover) var(--ease-out);
+      }
+
+      .card:hover,
+      .card:focus-visible {
+        transform: translateY(-4px);
+        box-shadow:
+          inset 0 0 0 1px var(--ring),
+          0 12px 38px rgba(0, 0, 0, 0.56);
+      }
+
+      .card:hover::after,
+      .card:focus-visible::after {
+        opacity: 1;
+      }
+
+      .card:hover h2,
+      .card:focus-visible h2 {
+        transform: translateY(-1px);
+      }
+
+      .card:active {
+        transition-duration: var(--t-press-in);
+        transition-timing-function: var(--ease-in);
+        transform: translateY(-1px) scale(0.992);
+        box-shadow:
+          inset 0 0 0 1px var(--ring),
+          0 8px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
         transform: translate(-50%, -50%) scale(0);
-        opacity: .35;
-      }
-
-      60% {
-        opacity: .22;
-      }
-
-      100% {
-        transform: translate(-50%, -50%) scale(1);
+        background: radial-gradient(
+          circle,
+          rgba(251, 185, 26, 0.35) 0%,
+          rgba(251, 185, 26, 0.22) 40%,
+          rgba(251, 185, 26, 0) 70%
+        );
         opacity: 0;
       }
-    }
-  </style>
-</head>
 
-<body class="hub">
-  <main class="grid" aria-label="Projects">
-    <a class="card" href="./apps/acidentes/">
-      <h2>Acidentes</h2>
-    </a>
-    <a class="card" href="./apps/ocorrencias/">
-      <h2>Interferências</h2>
-    </a>
-    <a class="card" href="./apps/alertas/">
-      <h2>Alertas</h2>
-    </a>
-  </main>
+      .ripple.is-animating {
+        animation: ripple-kf 720ms var(--ease-out) forwards;
+      }
 
-  <script>
-    // Ripple on click
-    const cards = document.querySelectorAll('.card');
-
-    function createRipple(card, x, y) {
-      const r = card.getBoundingClientRect();
-      const relX = x - r.left, relY = y - r.top;
-      const dx = Math.max(relX, r.width - relX);
-      const dy = Math.max(relY, r.height - relY);
-      const radius = Math.hypot(dx, dy);
-      const size = radius * 2;
-
-      const span = document.createElement('span');
-      span.className = 'ripple';
-      span.style.left = relX + 'px';
-      span.style.top = relY + 'px';
-      span.style.width = size + 'px';
-      span.style.height = size + 'px';
-      requestAnimationFrame(() => span.classList.add('is-animating'));
-      span.addEventListener('animationend', () => span.remove());
-      card.appendChild(span);
-    }
-
-    cards.forEach((card) => {
-      card.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 && e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
-        createRipple(card, e.clientX, e.clientY);
-      });
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          const r = card.getBoundingClientRect();
-          createRipple(card, r.left + r.width / 2, r.top + r.height / 2);
+      @keyframes ripple-kf {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0.35;
         }
-      });
-    });
-  </script>
-</body>
 
+        60% {
+          opacity: 0.22;
+        }
+
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="hub">
+    <main class="grid" aria-label="Projects">
+      <a class="card" href="./apps/acidentes/">
+        <h2>Acidentes</h2>
+      </a>
+      <a class="card" href="./apps/ocorrencias/">
+        <h2>Interferências</h2>
+      </a>
+      <a class="card" href="./apps/alertas/">
+        <h2>Alertas</h2>
+      </a>
+    </main>
+
+    <script>
+      // Ripple on click
+      const cards = document.querySelectorAll(".card");
+
+      function createRipple(card, x, y) {
+        const r = card.getBoundingClientRect();
+        const relX = x - r.left,
+          relY = y - r.top;
+        const dx = Math.max(relX, r.width - relX);
+        const dy = Math.max(relY, r.height - relY);
+        const radius = Math.hypot(dx, dy);
+        const size = radius * 2;
+
+        const span = document.createElement("span");
+        span.className = "ripple";
+        span.style.left = relX + "px";
+        span.style.top = relY + "px";
+        span.style.width = size + "px";
+        span.style.height = size + "px";
+        requestAnimationFrame(() => span.classList.add("is-animating"));
+        span.addEventListener("animationend", () => span.remove());
+        card.appendChild(span);
+      }
+
+      cards.forEach((card) => {
+        card.addEventListener("pointerdown", (e) => {
+          if (
+            e.button !== 0 &&
+            e.pointerType !== "touch" &&
+            e.pointerType !== "pen"
+          )
+            return;
+          createRipple(card, e.clientX, e.clientY);
+        });
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            const r = card.getBoundingClientRect();
+            createRipple(card, r.left + r.width / 2, r.top + r.height / 2);
+          }
+        });
+      });
+    </script>
+  </body>
 </html>
