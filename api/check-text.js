@@ -150,6 +150,8 @@ module.exports = async (req, res) => {
     return res.status(200).json(result);
   } catch (err) {
     console.error("Erro ao chamar Gemini:", err);
-    return res.status(500).json({ error: "Falha ao revisar o texto." });
+    return res
+      .status(500)
+      .json({ error: "Falha ao revisar o texto.", detail: err.message });
   }
 };
