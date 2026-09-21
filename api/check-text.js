@@ -58,14 +58,21 @@ REGRAS OBRIGATÓRIAS:
 
 18. Nunca invente uma correção apenas para produzir uma alteração. Se o texto estiver correto, retorne o texto original sem alterações.
 
+FORMATO DE ENTRADA:
+
+O texto vem dividido em duas seções, marcadas exatamente por [INICIO_DO_FATO] e [DESFECHO].
+As duas seções fazem parte do mesmo relato e devem ser lidas em conjunto para entender o contexto
+(por exemplo, um nome ou termo citado em uma seção pode explicar uma referência na outra), mas cada
+seção deve ser corrigida de forma independente. Não mova, junte ou reescreva conteúdo de uma seção
+para a outra.
+
 TAREFA:
 
-Analise o texto completo considerando o contexto de todas as frases.
+Analise as duas seções considerando o contexto de todas as frases, das duas seções.
 
-Retorne:
-- o texto completo corrigido;
-- uma lista contendo exclusivamente as alterações realmente realizadas;
-- para cada alteração, informe o trecho original, o trecho corrigido e o tipo de correção.
+Retorne exclusivamente a lista de alterações realmente realizadas, uma por vez, indicando em qual
+das duas seções ("inicioFato" ou "desfecho") cada alteração ocorreu, o trecho original, o trecho
+corrigido e o tipo de correção. Se nenhuma seção tiver erros, retorne uma lista vazia.
 
 Não inclua explicações gerais sobre o texto.
 `;
@@ -73,16 +80,16 @@ Não inclua explicações gerais sobre o texto.
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
-    correctedText: {
-      type: "string",
-      description: "Texto completo após as correções, preservando o significado e a estrutura original."
-    },
     changes: {
       type: "array",
-      description: "Somente as alterações realmente realizadas no texto.",
+      description: "Somente as alterações realmente realizadas em qualquer uma das duas seções. Lista vazia se não houver correções.",
       items: {
         type: "object",
         properties: {
+          field: {
+            type: "string",
+            description: "Seção onde ocorreu a alteração: 'inicioFato' ou 'desfecho'."
+          },
           original: {
             type: "string",
             description: "Trecho exatamente como aparece no texto original."
@@ -96,11 +103,11 @@ const RESPONSE_SCHEMA = {
             description: "Tipo da correção, como ortografia, acentuação, concordância verbal, concordância nominal, regência, pontuação ou gramática."
           }
         },
-        required: ["original", "replacement", "type"]
+        required: ["field", "original", "replacement", "type"]
       }
     }
   },
-  required: ["correctedText", "changes"]
+  required: ["changes"]
 };
 
 module.exports = async (req, res) => {
@@ -121,13 +128,26 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { text } = req.body || {};
+    const { fields } = req.body || {};
+    const inicioFato = fields?.inicioFato;
+    const desfecho = fields?.desfecho;
 
-    if (!text || typeof text !== "string" || !text.trim()) {
-      return res.status(400).json({ error: "Campo 'text' é obrigatório." });
+    if (
+      !inicioFato ||
+      typeof inicioFato !== "string" ||
+      !inicioFato.trim() ||
+      !desfecho ||
+      typeof desfecho !== "string" ||
+      !desfecho.trim()
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Os campos 'inicioFato' e 'desfecho' são obrigatórios." });
     }
 
-    if (text.length > MAX_TEXT_LENGTH) {
+    const combined = `[INICIO_DO_FATO]\n${inicioFato}\n\n[DESFECHO]\n${desfecho}`;
+
+    if (combined.length > MAX_TEXT_LENGTH) {
       return res
         .status(400)
         .json({ error: `Texto excede o limite de ${MAX_TEXT_LENGTH} caracteres.` });
@@ -137,11 +157,13 @@ module.exports = async (req, res) => {
 
     const response = await ai.models.generateContent({
       model: MODEL,
-      contents: text,
+      contents: combined,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: RESPONSE_SCHEMA,
+        temperature: 0.1,
+        thinkingConfig: { thinkingLevel: "minimal" },
       },
     });
 
@@ -150,8 +172,6 @@ module.exports = async (req, res) => {
     return res.status(200).json(result);
   } catch (err) {
     console.error("Erro ao chamar Gemini:", err);
-    return res
-      .status(500)
-      .json({ error: "Falha ao revisar o texto.", detail: err.message });
+    return res.status(500).json({ error: "Falha ao revisar o texto." });
   }
 };

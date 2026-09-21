@@ -632,14 +632,15 @@
     desfecho: "Desfecho",
   };
 
-  let reviewField = null;
   let reviewChanges = [];
 
-  async function requestTextReview(fieldId) {
-    const textarea = byId(fieldId);
-    const btn = byId("btn-review-" + fieldId);
-    if (!textarea || !nonEmpty(textarea.value)) {
-      ui.alert("Revisão de Texto", "Preencha o campo antes de revisar.");
+  async function requestTextReview() {
+    const inicioFato = byId("inicioFato");
+    const desfecho = byId("desfecho");
+    const btn = byId("btn-review-textos");
+
+    if (!nonEmpty(inicioFato?.value) || !nonEmpty(desfecho?.value)) {
+      ui.alert("Revisão de Texto", "Preencha os dois campos antes de revisar.");
       return;
     }
 
@@ -652,7 +653,9 @@
       const response = await fetch("/api/check-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: textarea.value }),
+        body: JSON.stringify({
+          fields: { inicioFato: inicioFato.value, desfecho: desfecho.value },
+        }),
       });
 
       const result = await response.json();
@@ -666,7 +669,6 @@
         return;
       }
 
-      reviewField = fieldId;
       reviewChanges = result.changes.map((c) => ({ ...c, selected: true }));
       openReviewModal();
     } catch (e) {
@@ -674,7 +676,7 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.querySelector(".front span").textContent = "REVISAR TEXTO";
+        btn.querySelector(".front span").textContent = "REVISAR TEXTOS";
       }
     }
   }
@@ -682,8 +684,7 @@
   function openReviewModal() {
     const title = byId("review-title");
     const list = byId("review-changes-list");
-    if (title)
-      title.textContent = `Revisão: ${FIELD_LABELS[reviewField] || reviewField}`;
+    if (title) title.textContent = "Revisão de Texto";
 
     if (list) {
       list.innerHTML = "";
@@ -693,7 +694,7 @@
           "display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;";
         item.innerHTML = `
           <input type="checkbox" data-idx="${i}" checked style="margin-top:3px" />
-          <span><strong>${change.type}</strong>: "${change.original}" → "${change.replacement}"</span>
+          <span><strong>${FIELD_LABELS[change.field] || change.field}</strong> — ${change.type}: "${change.original}" → "${change.replacement}"</span>
         `;
         item.querySelector("input").addEventListener("change", (e) => {
           reviewChanges[i].selected = e.target.checked;
@@ -706,14 +707,22 @@
   }
 
   function applyReviewChanges() {
-    const textarea = byId(reviewField);
-    if (!textarea) return;
+    const texts = {
+      inicioFato: byId("inicioFato")?.value,
+      desfecho: byId("desfecho")?.value,
+    };
 
-    let text = textarea.value;
     reviewChanges.forEach((change) => {
-      if (change.selected) text = text.replace(change.original, change.replacement);
+      if (change.selected && texts[change.field] != null) {
+        texts[change.field] = texts[change.field].replace(
+          change.original,
+          change.replacement
+        );
+      }
     });
-    textarea.value = text;
+
+    if (byId("inicioFato")) byId("inicioFato").value = texts.inicioFato;
+    if (byId("desfecho")) byId("desfecho").value = texts.desfecho;
 
     byId("modal-review")?.classList.remove("show");
   }
@@ -722,12 +731,7 @@
   /* Event Listeners & Actions                                                  */
   /* ========================================================================== */
   function wireActions() {
-    byId("btn-review-inicioFato")?.addEventListener("click", () =>
-      requestTextReview("inicioFato")
-    );
-    byId("btn-review-desfecho")?.addEventListener("click", () =>
-      requestTextReview("desfecho")
-    );
+    byId("btn-review-textos")?.addEventListener("click", requestTextReview);
     byId("btn-review-cancel")?.addEventListener("click", () =>
       byId("modal-review").classList.remove("show")
     );
