@@ -223,6 +223,52 @@ small {
   user-select: none;
 }
 
+/* --- Botão em Cooldown (Revisão de Texto) --- */
+.button:disabled {
+  cursor: not-allowed;
+}
+
+.button:disabled:hover .shadow,
+.button:disabled:hover .front {
+  transform: none;
+}
+
+.button.is-cooldown .shadow,
+.button.is-cooldown .edge {
+  background: #bbbbbb;
+}
+
+.button.is-cooldown .front {
+  background: #999999;
+  overflow: hidden;
+}
+
+.button.is-cooldown .front::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.22);
+  transform: scaleX(1);
+  transform-origin: left;
+  animation-name: cooldown-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-duration: var(--cooldown-seconds, 60s);
+}
+
+.button.is-cooldown .front span {
+  position: relative;
+}
+
+@keyframes cooldown-drain {
+  to {
+    transform: scaleX(0);
+  }
+}
+
 .buttons-row {
   display: flex;
   gap: 20px;

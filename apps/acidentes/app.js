@@ -649,12 +649,18 @@
     btn.disabled = true;
     label.textContent = `AGUARDE ${remaining}S`;
 
+    btn.classList.remove("is-cooldown");
+    void btn.offsetWidth;
+    btn.style.setProperty("--cooldown-seconds", `${seconds}s`);
+    btn.classList.add("is-cooldown");
+
     reviewCooldownInterval = setInterval(() => {
       remaining -= 1;
       if (remaining <= 0) {
         clearInterval(reviewCooldownInterval);
         reviewCooldownInterval = null;
         btn.disabled = false;
+        btn.classList.remove("is-cooldown");
         label.textContent = "REVISAR TEXTOS";
       } else {
         label.textContent = `AGUARDE ${remaining}S`;
