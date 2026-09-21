@@ -634,3 +634,150 @@ td {
   visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
+
+/* --- Modal Específico: Revisão de Texto --- */
+#modal-review .modal-content {
+  width: 95%;
+  max-width: 1100px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-layout {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+}
+
+.review-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.review-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-panel-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.review-text-box {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 15px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background: #fafafa;
+  white-space: pre-wrap;
+}
+
+.review-text-box .review-block + .review-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #ddd;
+}
+
+.review-text-box .review-block strong {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #b8860b;
+  margin-bottom: 4px;
+}
+
+.review-text-box mark.mark-err {
+  background: #fde2e1;
+  color: #c62828;
+  text-decoration: line-through;
+  text-decoration-color: #c62828;
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: help;
+}
+
+.review-text-box mark.mark-fix {
+  background: #e2f6e6;
+  color: #2e7d32;
+  border-radius: 3px;
+  padding: 0 2px;
+  cursor: help;
+  font-weight: 600;
+}
+
+.review-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.review-checklist {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 15px;
+}
+
+.review-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 4px;
+  font-size: 13px;
+  line-height: 1.3;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.review-check-item:last-child {
+  border-bottom: none;
+}
+
+.review-check-item input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.review-check-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.review-sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 700px) {
+  .review-layout {
+    flex-direction: column;
+  }
+  .review-sidebar {
+    width: 100%;
+  }
+}

@@ -681,28 +681,85 @@
     }
   }
 
-  function openReviewModal() {
-    const title = byId("review-title");
-    const list = byId("review-changes-list");
-    if (title) title.textContent = "Revisão de Texto";
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-    if (list) {
-      list.innerHTML = "";
-      reviewChanges.forEach((change, i) => {
-        const item = document.createElement("label");
-        item.style.cssText =
-          "display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;";
-        item.innerHTML = `
-          <input type="checkbox" data-idx="${i}" checked style="margin-top:3px" />
-          <span><strong>${FIELD_LABELS[change.field] || change.field}</strong> — ${change.type}: "${change.original}" → "${change.replacement}"</span>
-        `;
-        item.querySelector("input").addEventListener("change", (e) => {
-          reviewChanges[i].selected = e.target.checked;
-        });
-        list.appendChild(item);
+  function buildMarkedHtml(text, changes, mode) {
+    const positioned = changes
+      .map((c) => ({ ...c, idx: text.indexOf(c.original) }))
+      .filter((c) => c.idx !== -1)
+      .sort((a, b) => a.idx - b.idx);
+
+    let html = "";
+    let cursor = 0;
+    positioned.forEach((c) => {
+      if (c.idx < cursor) return;
+      html += escapeHtml(text.slice(cursor, c.idx));
+      if (mode === "original") {
+        html += `<mark class="mark-err" title="${escapeHtml(c.type)}">${escapeHtml(c.original)}</mark>`;
+      } else if (c.selected) {
+        html += `<mark class="mark-fix" title="${escapeHtml(c.type)}">${escapeHtml(c.replacement)}</mark>`;
+      } else {
+        html += escapeHtml(c.original);
+      }
+      cursor = c.idx + c.original.length;
+    });
+    html += escapeHtml(text.slice(cursor));
+    return html;
+  }
+
+  function renderReviewPanels() {
+    const originalBox = byId("review-original");
+    const correctedBox = byId("review-corrected");
+    if (!originalBox || !correctedBox) return;
+
+    const fieldsData = [
+      { id: "inicioFato", label: FIELD_LABELS.inicioFato },
+      { id: "desfecho", label: FIELD_LABELS.desfecho },
+    ];
+
+    const renderMode = (mode) =>
+      fieldsData
+        .map(({ id, label }) => {
+          const text = byId(id)?.value || "";
+          const changes = reviewChanges.filter((c) => c.field === id);
+          return `<div class="review-block"><strong>${escapeHtml(label)}</strong><p>${buildMarkedHtml(text, changes, mode)}</p></div>`;
+        })
+        .join("");
+
+    originalBox.innerHTML = renderMode("original");
+    correctedBox.innerHTML = renderMode("corrected");
+  }
+
+  function renderReviewChecklist() {
+    const list = byId("review-checklist");
+    if (!list) return;
+
+    list.innerHTML = "";
+    reviewChanges.forEach((change, i) => {
+      const item = document.createElement("label");
+      item.className = "review-check-item";
+      item.title = `${FIELD_LABELS[change.field] || change.field} — ${change.type}`;
+      item.innerHTML = `
+        <input type="checkbox" data-idx="${i}" ${change.selected ? "checked" : ""} />
+        <span>${escapeHtml(change.original)}</span>
+      `;
+      item.querySelector("input").addEventListener("change", (e) => {
+        reviewChanges[i].selected = e.target.checked;
+        renderReviewPanels();
       });
-    }
+      list.appendChild(item);
+    });
+  }
 
+  function openReviewModal() {
+    renderReviewPanels();
+    renderReviewChecklist();
     byId("modal-review")?.classList.add("show");
   }
 

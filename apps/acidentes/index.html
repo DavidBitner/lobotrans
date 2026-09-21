@@ -784,23 +784,34 @@
     </div>
 
     <div id="modal-review" class="modal">
-      <div class="modal-content" style="max-width: 600px">
+      <div class="modal-content">
         <h3 id="review-title" style="margin-top: 0">Revisão de Texto</h3>
-        <div
-          id="review-changes-list"
-          style="max-height: 300px; overflow-y: auto; margin-bottom: 20px"
-        ></div>
-        <div style="display: flex; gap: 10px">
-          <button class="button" id="btn-review-cancel" style="flex: 1">
-            <span class="shadow"></span><span class="edge"></span>
-            <div class="front" style="background: #777">
-              <span>CANCELAR</span>
+        <div class="review-layout">
+          <div class="review-main">
+            <div class="review-panel">
+              <div class="review-panel-label">Texto Original</div>
+              <div id="review-original" class="review-text-box"></div>
             </div>
-          </button>
-          <button class="button" id="btn-review-apply" style="flex: 1">
-            <span class="shadow"></span><span class="edge"></span>
-            <div class="front"><span>APLICAR SELECIONADAS</span></div>
-          </button>
+            <div class="review-panel">
+              <div class="review-panel-label">Texto Corrigido</div>
+              <div id="review-corrected" class="review-text-box"></div>
+            </div>
+          </div>
+          <div class="review-sidebar">
+            <div id="review-checklist" class="review-checklist"></div>
+            <div class="review-sidebar-actions">
+              <button class="button" id="btn-review-cancel" style="width: 100%">
+                <span class="shadow"></span><span class="edge"></span>
+                <div class="front" style="background: #777">
+                  <span>CANCELAR</span>
+                </div>
+              </button>
+              <button class="button" id="btn-review-apply" style="width: 100%">
+                <span class="shadow"></span><span class="edge"></span>
+                <div class="front"><span>APLICAR SELECIONADAS</span></div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
