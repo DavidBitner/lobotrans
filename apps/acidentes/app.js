@@ -636,29 +636,33 @@
   let reviewCooldownInterval = null;
 
   const REVIEW_COOLDOWN_SECONDS = 60;
+  const REVIEW_COOLDOWN_KEY = "lobotrans:reviewCooldownUntil";
 
-  function startReviewCooldown(seconds) {
+  function runReviewCooldownUntil(until) {
     const btn = byId("btn-review-textos");
     if (!btn) return;
 
     if (reviewCooldownInterval) clearInterval(reviewCooldownInterval);
 
     const label = btn.querySelector(".front span");
-    let remaining = seconds;
+    const totalSeconds = Math.max(1, Math.ceil((until - Date.now()) / 1000));
 
     btn.disabled = true;
-    label.textContent = `AGUARDE ${remaining}S`;
+    label.textContent = `AGUARDE ${totalSeconds}S`;
 
     btn.classList.remove("is-cooldown");
     void btn.offsetWidth;
-    btn.style.setProperty("--cooldown-seconds", `${seconds}s`);
+    btn.style.setProperty("--cooldown-seconds", `${totalSeconds}s`);
     btn.classList.add("is-cooldown");
 
     reviewCooldownInterval = setInterval(() => {
-      remaining -= 1;
+      const remaining = Math.ceil((until - Date.now()) / 1000);
       if (remaining <= 0) {
         clearInterval(reviewCooldownInterval);
         reviewCooldownInterval = null;
+        try {
+          localStorage.removeItem(REVIEW_COOLDOWN_KEY);
+        } catch (e) {}
         btn.disabled = false;
         btn.classList.remove("is-cooldown");
         label.textContent = "REVISAR TEXTOS";
@@ -666,6 +670,22 @@
         label.textContent = `AGUARDE ${remaining}S`;
       }
     }, 1000);
+  }
+
+  function startReviewCooldown(seconds) {
+    const until = Date.now() + seconds * 1000;
+    try {
+      localStorage.setItem(REVIEW_COOLDOWN_KEY, String(until));
+    } catch (e) {}
+    runReviewCooldownUntil(until);
+  }
+
+  function resumeReviewCooldown() {
+    let until = 0;
+    try {
+      until = Number(localStorage.getItem(REVIEW_COOLDOWN_KEY)) || 0;
+    } catch (e) {}
+    if (until > Date.now()) runReviewCooldownUntil(until);
   }
 
   async function requestTextReview() {
@@ -824,6 +844,7 @@
       byId("modal-review").classList.remove("show")
     );
     byId("btn-review-apply")?.addEventListener("click", applyReviewChanges);
+    resumeReviewCooldown();
 
     byId("clear")?.addEventListener("click", (e) => {
       e.preventDefault();
