@@ -715,6 +715,54 @@ td {
   font-weight: 600;
 }
 
+/* --- Tooltip customizado (Revisão de Texto) --- */
+#modal-review [data-tooltip] {
+  position: relative;
+}
+
+#modal-review [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background-color: #222;
+  color: #fff;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.15s ease;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#modal-review [data-tooltip]::before {
+  content: "";
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #222 transparent transparent transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.15s ease;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#modal-review [data-tooltip]:hover::after,
+#modal-review [data-tooltip]:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 .review-sidebar {
   width: 240px;
   flex-shrink: 0;

@@ -701,9 +701,9 @@
       if (c.idx < cursor) return;
       html += escapeHtml(text.slice(cursor, c.idx));
       if (mode === "original") {
-        html += `<mark class="mark-err" title="${escapeHtml(c.type)}">${escapeHtml(c.original)}</mark>`;
+        html += `<mark class="mark-err" data-tooltip="${escapeHtml(c.type)}">${escapeHtml(c.original)}</mark>`;
       } else if (c.selected) {
-        html += `<mark class="mark-fix" title="${escapeHtml(c.type)}">${escapeHtml(c.replacement)}</mark>`;
+        html += `<mark class="mark-fix" data-tooltip="${escapeHtml(c.type)}">${escapeHtml(c.replacement)}</mark>`;
       } else {
         html += escapeHtml(c.original);
       }
@@ -744,7 +744,7 @@
     reviewChanges.forEach((change, i) => {
       const item = document.createElement("label");
       item.className = "review-check-item";
-      item.title = `${FIELD_LABELS[change.field] || change.field} — ${change.type}`;
+      item.dataset.tooltip = `${FIELD_LABELS[change.field] || change.field} — ${change.type}`;
       item.innerHTML = `
         <input type="checkbox" data-idx="${i}" ${change.selected ? "checked" : ""} />
         <span>${escapeHtml(change.original)}</span>
