@@ -633,6 +633,34 @@
   };
 
   let reviewChanges = [];
+  let reviewCooldownInterval = null;
+
+  const REVIEW_COOLDOWN_SECONDS = 60;
+
+  function startReviewCooldown(seconds) {
+    const btn = byId("btn-review-textos");
+    if (!btn) return;
+
+    if (reviewCooldownInterval) clearInterval(reviewCooldownInterval);
+
+    const label = btn.querySelector(".front span");
+    let remaining = seconds;
+
+    btn.disabled = true;
+    label.textContent = `AGUARDE ${remaining}S`;
+
+    reviewCooldownInterval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(reviewCooldownInterval);
+        reviewCooldownInterval = null;
+        btn.disabled = false;
+        label.textContent = "REVISAR TEXTOS";
+      } else {
+        label.textContent = `AGUARDE ${remaining}S`;
+      }
+    }, 1000);
+  }
 
   async function requestTextReview() {
     const inicioFato = byId("inicioFato");
@@ -674,10 +702,7 @@
     } catch (e) {
       ui.alert("Erro na Revisão", e.message);
     } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.querySelector(".front span").textContent = "REVISAR TEXTOS";
-      }
+      startReviewCooldown(REVIEW_COOLDOWN_SECONDS);
     }
   }
 
