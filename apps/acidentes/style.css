@@ -728,39 +728,79 @@ td {
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
   margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
 }
 
 .review-check-item {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 6px 4px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  border-radius: 999px;
+  border: 1.5px solid #ddd;
+  background: #f2f2f2;
+  color: #999;
   font-size: 13px;
-  line-height: 1.3;
+  line-height: 1.2;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.review-check-item:last-child {
-  border-bottom: none;
+.review-check-item:has(input:checked) {
+  background: #e2f6e6;
+  border-color: #2e7d32;
+  color: #2e7d32;
+  font-weight: 600;
 }
 
 .review-check-item input {
-  width: auto;
-  height: auto;
-  margin: 2px 0 0 0;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
   padding: 0;
+  border: 2px solid #bbb;
+  border-radius: 5px;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
   flex-shrink: 0;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.review-check-item input:checked {
+  background: #2e7d32;
+  border-color: #2e7d32;
+}
+
+.review-check-item input:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .review-check-item span {
+  max-width: 190px;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .review-sidebar-actions {

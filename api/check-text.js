@@ -2,7 +2,7 @@
 
 const { GoogleGenAI } = require("@google/genai");
 
-const MODEL = "gemini-3.6-flash";
+const MODEL = "gemini-3.5-flash-lite";
 const MAX_TEXT_LENGTH = 20000;
 
 const SYSTEM_INSTRUCTION = `
@@ -162,7 +162,6 @@ module.exports = async (req, res) => {
         systemInstruction: SYSTEM_INSTRUCTION,
         responseMimeType: "application/json",
         responseSchema: RESPONSE_SCHEMA,
-        temperature: 0.1,
         thinkingConfig: { thinkingLevel: "minimal" },
       },
     });
