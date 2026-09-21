@@ -188,6 +188,15 @@
           rows="10"
           placeholder="Descreva o início do fato..."
         ></textarea>
+        <button
+          type="button"
+          id="btn-review-inicioFato"
+          class="button"
+          style="width: auto; margin-top: 10px"
+        >
+          <span class="shadow"></span><span class="edge"></span>
+          <div class="front"><span>REVISAR TEXTO</span></div>
+        </button>
       </section>
 
       <section class="form-section">
@@ -198,6 +207,15 @@
           rows="5"
           placeholder="Descreva o desfecho..."
         ></textarea>
+        <button
+          type="button"
+          id="btn-review-desfecho"
+          class="button"
+          style="width: auto; margin-top: 10px"
+        >
+          <span class="shadow"></span><span class="edge"></span>
+          <div class="front"><span>REVISAR TEXTO</span></div>
+        </button>
       </section>
 
       <h3>Informações Específicas</h3>
@@ -769,6 +787,28 @@
           <button class="button" id="btn-coords-apply" style="flex: 1">
             <span class="shadow"></span><span class="edge"></span>
             <div class="front"><span>PROCESSAR</span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-review" class="modal">
+      <div class="modal-content" style="max-width: 600px">
+        <h3 id="review-title" style="margin-top: 0">Revisão de Texto</h3>
+        <div
+          id="review-changes-list"
+          style="max-height: 300px; overflow-y: auto; margin-bottom: 20px"
+        ></div>
+        <div style="display: flex; gap: 10px">
+          <button class="button" id="btn-review-cancel" style="flex: 1">
+            <span class="shadow"></span><span class="edge"></span>
+            <div class="front" style="background: #777">
+              <span>CANCELAR</span>
+            </div>
+          </button>
+          <button class="button" id="btn-review-apply" style="flex: 1">
+            <span class="shadow"></span><span class="edge"></span>
+            <div class="front"><span>APLICAR SELECIONADAS</span></div>
           </button>
         </div>
       </div>

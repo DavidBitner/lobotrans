@@ -115,4 +115,41 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido." });
+  }
+
+  try {
+    const { text } = req.body || {};
+
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ error: "Campo 'text' é obrigatório." });
+    }
+
+    if (text.length > MAX_TEXT_LENGTH) {
+      return res
+        .status(400)
+        .json({ error: `Texto excede o limite de ${MAX_TEXT_LENGTH} caracteres.` });
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: text,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        responseMimeType: "application/json",
+        responseSchema: RESPONSE_SCHEMA,
+      },
+    });
+
+    const result = JSON.parse(response.text);
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("Erro ao chamar Gemini:", err);
+    return res.status(500).json({ error: "Falha ao revisar o texto." });
+  }
 };

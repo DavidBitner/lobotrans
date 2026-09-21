@@ -625,9 +625,114 @@
   }
 
   /* ========================================================================== */
+  /* Text Review (Gemini)                                                       */
+  /* ========================================================================== */
+  const FIELD_LABELS = {
+    inicioFato: "Início do Fato",
+    desfecho: "Desfecho",
+  };
+
+  let reviewField = null;
+  let reviewChanges = [];
+
+  async function requestTextReview(fieldId) {
+    const textarea = byId(fieldId);
+    const btn = byId("btn-review-" + fieldId);
+    if (!textarea || !nonEmpty(textarea.value)) {
+      ui.alert("Revisão de Texto", "Preencha o campo antes de revisar.");
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.querySelector(".front span").textContent = "REVISANDO...";
+    }
+
+    try {
+      const response = await fetch("/api/check-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textarea.value }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `Status ${response.status}`);
+      }
+
+      if (!result.changes || result.changes.length === 0) {
+        ui.alert("Revisão de Texto", "Nenhuma correção encontrada.");
+        return;
+      }
+
+      reviewField = fieldId;
+      reviewChanges = result.changes.map((c) => ({ ...c, selected: true }));
+      openReviewModal();
+    } catch (e) {
+      ui.alert("Erro na Revisão", e.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.querySelector(".front span").textContent = "REVISAR TEXTO";
+      }
+    }
+  }
+
+  function openReviewModal() {
+    const title = byId("review-title");
+    const list = byId("review-changes-list");
+    if (title)
+      title.textContent = `Revisão: ${FIELD_LABELS[reviewField] || reviewField}`;
+
+    if (list) {
+      list.innerHTML = "";
+      reviewChanges.forEach((change, i) => {
+        const item = document.createElement("label");
+        item.style.cssText =
+          "display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #eee; cursor:pointer;";
+        item.innerHTML = `
+          <input type="checkbox" data-idx="${i}" checked style="margin-top:3px" />
+          <span><strong>${change.type}</strong>: "${change.original}" → "${change.replacement}"</span>
+        `;
+        item.querySelector("input").addEventListener("change", (e) => {
+          reviewChanges[i].selected = e.target.checked;
+        });
+        list.appendChild(item);
+      });
+    }
+
+    byId("modal-review")?.classList.add("show");
+  }
+
+  function applyReviewChanges() {
+    const textarea = byId(reviewField);
+    if (!textarea) return;
+
+    let text = textarea.value;
+    reviewChanges.forEach((change) => {
+      if (change.selected) text = text.replace(change.original, change.replacement);
+    });
+    textarea.value = text;
+
+    byId("modal-review")?.classList.remove("show");
+  }
+
+  /* ========================================================================== */
   /* Event Listeners & Actions                                                  */
   /* ========================================================================== */
   function wireActions() {
+    byId("btn-review-inicioFato")?.addEventListener("click", () =>
+      requestTextReview("inicioFato")
+    );
+    byId("btn-review-desfecho")?.addEventListener("click", () =>
+      requestTextReview("desfecho")
+    );
+    byId("btn-review-cancel")?.addEventListener("click", () =>
+      byId("modal-review").classList.remove("show")
+    );
+    byId("btn-review-apply")?.addEventListener("click", applyReviewChanges);
+
     byId("clear")?.addEventListener("click", (e) => {
       e.preventDefault();
       ui.confirm("Limpar Formulário", "Deseja apagar tudo?", () => clearAll());
