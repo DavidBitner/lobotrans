@@ -138,6 +138,23 @@ small {
   margin-bottom: 10px;
 }
 
+/* --- Selo Beta (Revisão de Texto) --- */
+.badge-beta {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(251, 185, 26, 0.1);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
 .input-with-button {
   display: flex;
   gap: 10px;
