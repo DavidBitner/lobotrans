@@ -13,6 +13,7 @@ The system is used daily by the operational team to handle critical workflows su
 Eliminates the need for manual Word document formatting.
 - **Dynamic Forms:** Captures structured data (dates, locations, involved parties).
 - **Image Processing:** Automatically handles image uploads, resizing, and positioning within the document.
+- **AI-Powered Text Review (Beta):** Grammar and spelling review for key narrative fields via the Gemini API, with a review-and-approve flow before changes are applied.
 - **Template Engine:** Injects data into a `.docx` template, ensuring 100% visual consistency across all company reports.
 - **Output:** Generates ready-to-print/sign Word documents instantly.
 
@@ -24,6 +25,7 @@ Eliminates the need for manual Word document formatting.
 - **Frontend:** JavaScript (ES6+), CSS3, HTML5.
 - **Backend:** Node.js, Express.
 - **Document Processing:** `docx` library (for programmatic Word generation), `multer` (file handling).
+- **AI Integration:** Google Gemini API (`@google/genai`) for text review.
 - **Architecture:** Modular Monorepo structure containing multiple sub-applications.
 
 ## 💡 Impact
