@@ -636,7 +636,7 @@
   let reviewCooldownInterval = null;
 
   const REVIEW_COOLDOWN_SECONDS = 60;
-  const REVIEW_COOLDOWN_KEY = "lobotrans:reviewCooldownUntil";
+  const REVIEW_COOLDOWN_KEY = "lts:reviewCooldownUntil";
 
   function runReviewCooldownUntil(until) {
     const btn = byId("btn-review-textos");

@@ -1,9 +1,9 @@
-# Lobotrans - Operational Automation Hub
+# LTS - Operational Automation Hub
 
 > **Internal Tooling Suite developed for Transwolff's Operational Control Center.**
 
 ## 🎯 Overview
-Lobotrans is a web-based suite of tools designed to automate and standardize daily operational reporting tasks. It replaces manual document formatting (Word/Excel) with structured web forms that automatically generate professional, standardized reports using pre-defined templates.
+LTS is a web-based suite of tools designed to automate and standardize daily operational reporting tasks. It replaces manual document formatting (Word/Excel) with structured web forms that automatically generate professional, standardized reports using pre-defined templates.
 
 The system is used daily by the operational team to handle critical workflows such as accident reporting, occurrence logging, and real-time alerts.
 
